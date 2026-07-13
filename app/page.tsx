@@ -7,28 +7,34 @@ export default async function HomePage() {
   const matchupResult = await getMatchup();
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-140px)] w-full max-w-5xl flex-col items-center justify-center px-4 py-12">
-      <section className="mb-12 text-center">
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">
-          Community Internship Verdict
+    <main className="bg-white">
+      <section className="mx-auto max-w-6xl px-5 pb-8 pt-12 text-center sm:px-6 lg:pb-10 lg:pt-14">
+        <p className="text-xs font-bold uppercase tracking-[0.32em] text-slate-400">
+          Vote
         </p>
-        <h1 className="mt-1 text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
+        <h1 className="mx-auto mt-4 max-w-4xl text-4xl font-normal tracking-[-0.04em] text-black sm:text-5xl lg:text-6xl">
           Where would you rather intern?
         </h1>
+        <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-7 text-neutral-500 sm:text-lg">
+          Compare two programs at a time. The leaderboard quietly moves as the
+          community chooses.
+        </p>
       </section>
 
-      {matchupResult.ok ? (
-        <VoteMatchup initialMatchup={matchupResult.data} />
-      ) : (
-        <section className="w-full max-w-xl rounded-2xl border border-slate-100 bg-white px-6 py-10 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            Setup needed
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-500">
-            {matchupResult.error}
-          </p>
-        </section>
-      )}
+      <section className="mx-auto max-w-6xl px-5 pb-24 sm:px-6">
+        {matchupResult.ok ? (
+          <VoteMatchup initialMatchup={matchupResult.data} />
+        ) : (
+          <section className="mx-auto max-w-xl border-y border-slate-200 py-10 text-center">
+            <h2 className="text-3xl font-normal tracking-[-0.035em] text-black">
+              Setup needed
+            </h2>
+            <p className="mt-3 text-base font-medium leading-7 text-neutral-500">
+              {matchupResult.error}
+            </p>
+          </section>
+        )}
+      </section>
     </main>
   );
 }
