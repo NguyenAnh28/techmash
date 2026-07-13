@@ -79,7 +79,11 @@ The MVP needs one main table: `companies`.
 create table companies (
   id uuid default gen_random_uuid() primary key,
   name text not null unique,
-  logo_url text not null,
+  domain text,
+  hourly_pay integer,
+  num_submits integer,
+  housing_perk text,
+  signature_perk text,
   rating integer default 1200 not null,
   votes_won integer default 0 not null,
   total_matches integer default 0 not null,
@@ -93,7 +97,11 @@ The matching TypeScript shape should be explicit:
 export interface Company {
   id: string;
   name: string;
-  logo_url: string;
+  domain: string | null;
+  hourly_pay: number | null;
+  num_submits: number | null;
+  housing_perk: string | null;
+  signature_perk: string | null;
   rating: number;
   votes_won: number;
   total_matches: number;
@@ -116,33 +124,7 @@ Do not add a public update policy for the recommended implementation. Public upd
 
 ## Seed Data
 
-Seed the database with recognizable companies. Logo URLs usually use the `thesvg.org` CDN pattern `https://thesvg.org/icons/{slug}/default.svg`. If a default SVG is white and disappears on the white UI, store the `light.svg` variant for that brand.
-
-```sql
-with seed_companies (name, slug, logo_variant, rating) as (
-  values
-    ('Google', 'google', 'default', 1200),
-    ('Apple', 'apple', 'light', 1200),
-    ('Microsoft', 'microsoft', 'default', 1200),
-    ('Meta', 'meta', 'default', 1200),
-    ('Netflix', 'netflix', 'default', 1200),
-    ('Stripe', 'stripe', 'default', 1200),
-    ('OpenAI', 'openai', 'light', 1200),
-    ('SpaceX', 'spacex', 'default', 1200),
-    ('Nvidia', 'nvidia', 'light', 1200),
-    ('Vercel', 'vercel', 'light', 1200),
-    ('Airbnb', 'airbnb', 'default', 1200),
-    ('Uber', 'uber', 'light', 1200)
-)
-insert into companies (name, logo_url, rating)
-select
-  name,
-  'https://thesvg.org/icons/' || slug || '/' || logo_variant || '.svg',
-  rating
-from seed_companies
-on conflict (name) do update
-set logo_url = excluded.logo_url;
-```
+Seed the database from `data/internships.csv`. The CSV is the source of truth for the company catalog and includes `name`, `domain`, `hourly_pay`, `num_submits`, `housing_perk`, and `signature_perk`. Company logos are resolved on demand by the frontend through logo.dev, so the database should store `domain`, not generated logo URLs.
 
 ## Atomic Vote Function
 
@@ -336,10 +318,9 @@ Card visual behavior:
 - Use `hover:scale-105 transition-transform duration-200` or an equivalent Tailwind transition.
 - Keep cards keyboard accessible with button semantics.
 - Use alt text for logos.
-- Render transparent SVG logos from `thesvg.org`.
-- Support optional `/light.svg` variants for brands whose default logo is invisible on the white surface.
-- Use the logo audit command when adding seed companies so variant choices are based on the SVG payload instead of guesswork.
-- If a logo URL fails, show a modern colored initial-letter badge.
+- Render company logos from `https://img.logo.dev/{domain}` through Next.js image optimization.
+- Configure `img.logo.dev` in `next.config.ts` and set `minimumCacheTTL: 31536000`.
+- If logo.dev returns a missing asset, show a modern colored initial-letter badge.
 
 Empty state:
 

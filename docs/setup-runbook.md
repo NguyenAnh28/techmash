@@ -49,6 +49,7 @@ Create `.env.local` for local development:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-or-publishable-key"
+NEXT_PUBLIC_LOGO_DEV_TOKEN="pk_your-logo-dev-public-key"
 SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
@@ -56,6 +57,7 @@ Variable usage:
 
 - `NEXT_PUBLIC_SUPABASE_URL` identifies the Supabase project.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be used for public reads if needed.
+- `NEXT_PUBLIC_LOGO_DEV_TOKEN` is the public logo.dev token used by the logo component.
 - `SUPABASE_SERVICE_ROLE_KEY` is used only by server actions and must never be exposed to client components.
 
 On Vercel, add the same variables under Project Settings -> Environment Variables. Keep `SUPABASE_SERVICE_ROLE_KEY` marked as a secret server-side value.
@@ -68,7 +70,11 @@ Open the Supabase SQL Editor and run this setup script. The same setup script is
 create table if not exists companies (
   id uuid default gen_random_uuid() primary key,
   name text not null unique,
-  logo_url text not null,
+  domain text,
+  hourly_pay integer,
+  num_submits integer,
+  housing_perk text,
+  signature_perk text,
   rating integer default 1200 not null,
   votes_won integer default 0 not null,
   total_matches integer default 0 not null,
@@ -171,32 +177,10 @@ revoke execute on function record_company_vote(uuid, uuid, integer) from authent
 grant execute on function record_company_vote(uuid, uuid, integer) to service_role;
 ```
 
-Seed the starting companies:
+Seed the company catalog from `data/internships.csv`. The CSV should include `name`, `domain`, `hourly_pay`, `num_submits`, `housing_perk`, and `signature_perk`.
 
-```sql
-with seed_companies (name, slug, logo_variant, rating) as (
-  values
-    ('Google', 'google', 'default', 1200),
-    ('Apple', 'apple', 'light', 1200),
-    ('Microsoft', 'microsoft', 'default', 1200),
-    ('Meta', 'meta', 'default', 1200),
-    ('Netflix', 'netflix', 'default', 1200),
-    ('Stripe', 'stripe', 'default', 1200),
-    ('OpenAI', 'openai', 'light', 1200),
-    ('SpaceX', 'spacex', 'default', 1200),
-    ('Nvidia', 'nvidia', 'light', 1200),
-    ('Vercel', 'vercel', 'light', 1200),
-    ('Airbnb', 'airbnb', 'default', 1200),
-    ('Uber', 'uber', 'light', 1200)
-)
-insert into companies (name, logo_url, rating)
-select
-  name,
-  'https://thesvg.org/icons/' || slug || '/' || logo_variant || '.svg',
-  rating
-from seed_companies
-on conflict (name) do update
-set logo_url = excluded.logo_url;
+```bash
+npm run seed:internships
 ```
 
 ## 4. Implementation Checklist
@@ -207,7 +191,11 @@ Create the shared company type:
 export interface Company {
   id: string;
   name: string;
-  logo_url: string;
+  domain: string | null;
+  hourly_pay: number | null;
+  num_submits: number | null;
+  housing_perk: string | null;
+  signature_perk: string | null;
   rating: number;
   votes_won: number;
   total_matches: number;
@@ -365,10 +353,10 @@ If the leaderboard is empty:
 
 If logos do not appear:
 
-- Confirm the `logo_url` points to a valid `https://thesvg.org/icons/{slug}/{variant}.svg` asset.
-- Use `/light.svg` instead of `/default.svg` when a brand's default SVG is white on the white UI.
-- Run `npm run logos:audit` or `npm run logos:audit some-slug` to check whether a new seed logo should use `default` or `light`.
-- Confirm the app has a fallback UI for missing CDN assets.
+- Confirm `NEXT_PUBLIC_LOGO_DEV_TOKEN` is set locally and on Vercel.
+- Confirm the company has a valid `domain`, such as `google.com`.
+- Confirm `img.logo.dev` is allowed in `next.config.ts`.
+- Confirm the app has a fallback UI for missing logo.dev assets.
 
 If ratings look wrong:
 
