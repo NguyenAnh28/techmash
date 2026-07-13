@@ -62,13 +62,13 @@ On Vercel, add the same variables under Project Settings -> Environment Variable
 
 ## 3. Supabase SQL Setup
 
-Open the Supabase SQL Editor and run this setup script.
+Open the Supabase SQL Editor and run this setup script. The same setup script is also available in `supabase/schema.sql`.
 
 ```sql
 create table if not exists companies (
   id uuid default gen_random_uuid() primary key,
   name text not null unique,
-  logo_url text,
+  logo_url text not null,
   rating integer default 1200 not null,
   votes_won integer default 0 not null,
   total_matches integer default 0 not null,
@@ -116,17 +116,21 @@ begin
     raise exception 'winner_id and loser_id must be different';
   end if;
 
+  perform 1
+  from companies
+  where id in (winner_id, loser_id)
+  order by id
+  for update;
+
   select *
   into winner_current
   from companies
-  where id = winner_id
-  for update;
+  where id = winner_id;
 
   select *
   into loser_current
   from companies
-  where id = loser_id
-  for update;
+  where id = loser_id;
 
   if winner_current.id is null or loser_current.id is null then
     raise exception 'winner or loser was not found';
@@ -170,20 +174,29 @@ grant execute on function record_company_vote(uuid, uuid, integer) to service_ro
 Seed the starting companies:
 
 ```sql
-insert into companies (name, logo_url, rating) values
-('Google', 'https://logo.clearbit.com/google.com', 1200),
-('Apple', 'https://logo.clearbit.com/apple.com', 1200),
-('Microsoft', 'https://logo.clearbit.com/microsoft.com', 1200),
-('Meta', 'https://logo.clearbit.com/meta.com', 1200),
-('Netflix', 'https://logo.clearbit.com/netflix.com', 1200),
-('Stripe', 'https://logo.clearbit.com/stripe.com', 1200),
-('OpenAI', 'https://logo.clearbit.com/openai.com', 1200),
-('SpaceX', 'https://logo.clearbit.com/spacex.com', 1200),
-('Nvidia', 'https://logo.clearbit.com/nvidia.com', 1200),
-('Vercel', 'https://logo.clearbit.com/vercel.com', 1200),
-('Airbnb', 'https://logo.clearbit.com/airbnb.com', 1200),
-('Uber', 'https://logo.clearbit.com/uber.com', 1200)
-on conflict (name) do nothing;
+with seed_companies (name, slug, logo_variant, rating) as (
+  values
+    ('Google', 'google', 'default', 1200),
+    ('Apple', 'apple', 'light', 1200),
+    ('Microsoft', 'microsoft', 'default', 1200),
+    ('Meta', 'meta', 'default', 1200),
+    ('Netflix', 'netflix', 'default', 1200),
+    ('Stripe', 'stripe', 'default', 1200),
+    ('OpenAI', 'openai', 'light', 1200),
+    ('SpaceX', 'spacex', 'default', 1200),
+    ('Nvidia', 'nvidia', 'light', 1200),
+    ('Vercel', 'vercel', 'light', 1200),
+    ('Airbnb', 'airbnb', 'default', 1200),
+    ('Uber', 'uber', 'light', 1200)
+)
+insert into companies (name, logo_url, rating)
+select
+  name,
+  'https://thesvg.org/icons/' || slug || '/' || logo_variant || '.svg',
+  rating
+from seed_companies
+on conflict (name) do update
+set logo_url = excluded.logo_url;
 ```
 
 ## 4. Implementation Checklist
@@ -194,7 +207,7 @@ Create the shared company type:
 export interface Company {
   id: string;
   name: string;
-  logo_url: string | null;
+  logo_url: string;
   rating: number;
   votes_won: number;
   total_matches: number;
@@ -352,8 +365,10 @@ If the leaderboard is empty:
 
 If logos do not appear:
 
-- Confirm the remote image domain is allowed in the Next.js image config, or use standard `img` tags for the MVP.
-- Confirm the app has a fallback UI for missing images.
+- Confirm the `logo_url` points to a valid `https://thesvg.org/icons/{slug}/{variant}.svg` asset.
+- Use `/light.svg` instead of `/default.svg` when a brand's default SVG is white on the white UI.
+- Run `npm run logos:audit` or `npm run logos:audit some-slug` to check whether a new seed logo should use `default` or `light`.
+- Confirm the app has a fallback UI for missing CDN assets.
 
 If ratings look wrong:
 

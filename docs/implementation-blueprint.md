@@ -79,7 +79,7 @@ The MVP needs one main table: `companies`.
 create table companies (
   id uuid default gen_random_uuid() primary key,
   name text not null unique,
-  logo_url text,
+  logo_url text not null,
   rating integer default 1200 not null,
   votes_won integer default 0 not null,
   total_matches integer default 0 not null,
@@ -93,7 +93,7 @@ The matching TypeScript shape should be explicit:
 export interface Company {
   id: string;
   name: string;
-  logo_url: string | null;
+  logo_url: string;
   rating: number;
   votes_won: number;
   total_matches: number;
@@ -116,22 +116,32 @@ Do not add a public update policy for the recommended implementation. Public upd
 
 ## Seed Data
 
-Seed the database with recognizable companies and logo URLs:
+Seed the database with recognizable companies. Logo URLs usually use the `thesvg.org` CDN pattern `https://thesvg.org/icons/{slug}/default.svg`. If a default SVG is white and disappears on the white UI, store the `light.svg` variant for that brand.
 
 ```sql
-insert into companies (name, logo_url, rating) values
-('Google', 'https://logo.clearbit.com/google.com', 1200),
-('Apple', 'https://logo.clearbit.com/apple.com', 1200),
-('Microsoft', 'https://logo.clearbit.com/microsoft.com', 1200),
-('Meta', 'https://logo.clearbit.com/meta.com', 1200),
-('Netflix', 'https://logo.clearbit.com/netflix.com', 1200),
-('Stripe', 'https://logo.clearbit.com/stripe.com', 1200),
-('OpenAI', 'https://logo.clearbit.com/openai.com', 1200),
-('SpaceX', 'https://logo.clearbit.com/spacex.com', 1200),
-('Nvidia', 'https://logo.clearbit.com/nvidia.com', 1200),
-('Vercel', 'https://logo.clearbit.com/vercel.com', 1200),
-('Airbnb', 'https://logo.clearbit.com/airbnb.com', 1200),
-('Uber', 'https://logo.clearbit.com/uber.com', 1200);
+with seed_companies (name, slug, logo_variant, rating) as (
+  values
+    ('Google', 'google', 'default', 1200),
+    ('Apple', 'apple', 'light', 1200),
+    ('Microsoft', 'microsoft', 'default', 1200),
+    ('Meta', 'meta', 'default', 1200),
+    ('Netflix', 'netflix', 'default', 1200),
+    ('Stripe', 'stripe', 'default', 1200),
+    ('OpenAI', 'openai', 'light', 1200),
+    ('SpaceX', 'spacex', 'default', 1200),
+    ('Nvidia', 'nvidia', 'light', 1200),
+    ('Vercel', 'vercel', 'light', 1200),
+    ('Airbnb', 'airbnb', 'default', 1200),
+    ('Uber', 'uber', 'light', 1200)
+)
+insert into companies (name, logo_url, rating)
+select
+  name,
+  'https://thesvg.org/icons/' || slug || '/' || logo_variant || '.svg',
+  rating
+from seed_companies
+on conflict (name) do update
+set logo_url = excluded.logo_url;
 ```
 
 ## Atomic Vote Function
@@ -139,7 +149,7 @@ insert into companies (name, logo_url, rating) values
 The original generated plan tried to put `supabase.rpc(...)` calls inside `.update(...)` values. That is not the correct shape for Supabase JavaScript updates. Instead, create a single Postgres function that:
 
 - Validates that winner and loser are different.
-- Locks both company rows for update.
+- Locks both company rows for update in deterministic ID order.
 - Reads the current ratings and counters.
 - Calculates new Elo ratings.
 - Increments `votes_won` for the winner.
@@ -176,17 +186,21 @@ begin
     raise exception 'winner_id and loser_id must be different';
   end if;
 
+  perform 1
+  from companies
+  where id in (winner_id, loser_id)
+  order by id
+  for update;
+
   select *
   into winner_current
   from companies
-  where id = winner_id
-  for update;
+  where id = winner_id;
 
   select *
   into loser_current
   from companies
-  where id = loser_id
-  for update;
+  where id = loser_id;
 
   if winner_current.id is null or loser_current.id is null then
     raise exception 'winner or loser was not found';
@@ -302,7 +316,7 @@ Route: `/`
 
 Layout behavior:
 
-- Dark slate background.
+- Light background with black text and restrained gray hover states.
 - Minimal header navigation with links to Vote and Leaderboard.
 - Centered two-column matchup on desktop.
 - Single-column stacked matchup on small screens.
@@ -322,7 +336,10 @@ Card visual behavior:
 - Use `hover:scale-105 transition-transform duration-200` or an equivalent Tailwind transition.
 - Keep cards keyboard accessible with button semantics.
 - Use alt text for logos.
-- If `logo_url` is missing or the image fails, show a simple fallback using the company initial.
+- Render transparent SVG logos from `thesvg.org`.
+- Support optional `/light.svg` variants for brands whose default logo is invisible on the white surface.
+- Use the logo audit command when adding seed companies so variant choices are based on the SVG payload instead of guesswork.
+- If a logo URL fails, show a modern colored initial-letter badge.
 
 Empty state:
 
@@ -373,7 +390,7 @@ Handle these cases explicitly:
 - A user submits the same company as winner and loser.
 - A submitted ID does not exist.
 - A user double-clicks during a pending vote.
-- A logo URL fails to load.
+- A company logo URL returns a missing or broken asset.
 - A company has zero total matches.
 - Concurrent votes happen for the same company pair.
 
@@ -405,7 +422,7 @@ Before shipping:
 - Run a manual vote and confirm both database rows changed correctly.
 - Refresh the leaderboard and confirm rank order changed if ratings moved.
 - Test on a narrow mobile viewport.
-- Test an invalid or missing logo URL.
+- Test a company with a missing or broken logo URL.
 - Run linting, type checking, and a production build.
 
 ## References
