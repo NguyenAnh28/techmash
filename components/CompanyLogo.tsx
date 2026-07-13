@@ -2,16 +2,17 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 interface CompanyLogoProps {
   name: string;
-  logoUrl: string | null;
+  domain: string | null;
+  background?: string | null;
   className: string;
   fallbackClassName: string;
 }
 
-const THE_SVG_ICON_URL_PATTERN =
-  /^https:\/\/thesvg\.org\/icons\/([^/]+)\/(default|dark|light)\.svg$/;
+const LOGO_DEV_TOKEN = process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN;
 
 const FALLBACK_BADGE_CLASSES = [
   "bg-[#eef2ff] text-[#3730a3]",
@@ -22,43 +23,34 @@ const FALLBACK_BADGE_CLASSES = [
   "bg-[#f5f5f5] text-black",
 ];
 
-function getTheSvgLogoParts(
-  logoUrl: string | null,
-): { slug: string; variant: string } | null {
-  if (!logoUrl) {
+function normalizeDomain(domain: string | null): string | null {
+  const trimmedDomain = domain?.trim();
+
+  if (!trimmedDomain) {
     return null;
   }
 
-  const match = THE_SVG_ICON_URL_PATTERN.exec(logoUrl);
-
-  if (!match) {
-    return null;
-  }
-
-  return {
-    slug: match[1],
-    variant: match[2],
-  };
+  return trimmedDomain
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/\/.*$/, "");
 }
 
-function getLogoUrlCandidates(logoUrl: string | null): string[] {
-  if (!logoUrl) {
-    return [];
+function getLogoDevUrl(domain: string | null): string | null {
+  const normalizedDomain = normalizeDomain(domain);
+
+  if (!normalizedDomain || !LOGO_DEV_TOKEN) {
+    return null;
   }
 
-  const logoParts = getTheSvgLogoParts(logoUrl);
+  const params = new URLSearchParams({
+    token: LOGO_DEV_TOKEN,
+    fallback: "404",
+    format: "png",
+    size: "128",
+  });
 
-  if (!logoParts) {
-    return [logoUrl];
-  }
-
-  const candidates = [logoUrl];
-
-  if (logoParts.variant !== "default") {
-    candidates.push(`https://thesvg.org/icons/${logoParts.slug}/default.svg`);
-  }
-
-  return candidates;
+  return `https://img.logo.dev/${encodeURIComponent(normalizedDomain)}?${params.toString()}`;
 }
 
 function getFallbackBadgeClassName(name: string): string {
@@ -72,35 +64,49 @@ function getFallbackBadgeClassName(name: string): string {
 
 export function CompanyLogo({
   name,
-  logoUrl,
+  domain,
+  background = null,
   className,
   fallbackClassName,
 }: CompanyLogoProps) {
-  const [failedLogoUrls, setFailedLogoUrls] = useState<string[]>([]);
-  const logoUrlCandidates = useMemo(() => getLogoUrlCandidates(logoUrl), [logoUrl]);
-  const resolvedLogoUrl = logoUrlCandidates.find(
-    (candidate) => !failedLogoUrls.includes(candidate),
-  );
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
+  const logoUrl = useMemo(() => getLogoDevUrl(domain), [domain]);
+  const imageFailed = logoUrl === failedLogoUrl;
   const initial = name.slice(0, 1).toUpperCase();
 
-  if (resolvedLogoUrl) {
-    return (
+  if (logoUrl && !imageFailed) {
+    function handleLogoError() {
+      setFailedLogoUrl(logoUrl);
+      trackAnalyticsEvent("logo_error", {
+        company_name: name,
+        domain: domain ?? null,
+        background: background ?? null,
+      });
+    }
+
+    const image = (
       <Image
-        key={resolvedLogoUrl}
-        src={resolvedLogoUrl}
+        key={logoUrl}
+        src={logoUrl}
         aria-label={`${name} logo`}
         alt={`${name} logo`}
         width={128}
         height={128}
         className={className}
-        onError={() =>
-          setFailedLogoUrls((currentFailedLogoUrls) => [
-            ...currentFailedLogoUrls,
-            resolvedLogoUrl,
-          ])
-        }
-        unoptimized
+        onError={handleLogoError}
       />
+    );
+
+    if (background === "dark") {
+      return (
+        <span className="inline-flex items-center justify-center rounded-xl bg-black p-2">
+          {image}
+        </span>
+      );
+    }
+
+    return (
+      image
     );
   }
 

@@ -3,50 +3,47 @@ create extension if not exists pgcrypto;
 create table if not exists companies (
   id uuid default gen_random_uuid() primary key,
   name text not null unique,
-  logo_url text not null,
+  domain text,
+  logo_domain text,
+  logo_background text,
+  hourly_pay integer,
+  num_submits integer,
+  housing_perk text,
+  signature_perk text,
   rating integer default 1200 not null,
   votes_won integer default 0 not null,
   total_matches integer default 0 not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
-alter table companies add column if not exists logo_url text;
+create table if not exists analytics_events (
+  id uuid default gen_random_uuid() primary key,
+  event_type text not null,
+  path text,
+  session_id text,
+  metadata jsonb default '{}'::jsonb not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
-update companies
-set logo_url = 'https://thesvg.org/icons/' ||
-  case name
-    when 'Google' then 'google'
-    when 'Apple' then 'apple'
-    when 'Microsoft' then 'microsoft'
-    when 'Meta' then 'meta'
-    when 'Netflix' then 'netflix'
-    when 'Stripe' then 'stripe'
-    when 'OpenAI' then 'openai'
-    when 'SpaceX' then 'spacex'
-    when 'Nvidia' then 'nvidia'
-    when 'Vercel' then 'vercel'
-    when 'Airbnb' then 'airbnb'
-    when 'Uber' then 'uber'
-    else lower(regexp_replace(name, '[^a-zA-Z0-9]+', '-', 'g'))
-  end || '/' ||
-  case name
-    when 'Apple' then 'light'
-    when 'Nvidia' then 'light'
-    when 'OpenAI' then 'light'
-    when 'Vercel' then 'light'
-    when 'Uber' then 'light'
-    else 'default'
-  end || '.svg'
-where
-  logo_url is null
-  or logo_url = ''
-  or logo_url like 'https://logo.clearbit.com/%'
-  or logo_url like 'https://cdn.jsdelivr.net/gh/gilbarbara/logos@main/logos/%';
+create index if not exists analytics_events_event_type_created_at_idx
+on analytics_events (event_type, created_at desc);
 
-alter table companies alter column logo_url set not null;
+create index if not exists analytics_events_created_at_idx
+on analytics_events (created_at desc);
+
+alter table companies add column if not exists domain text;
+alter table companies add column if not exists logo_domain text;
+alter table companies add column if not exists logo_background text;
+alter table companies add column if not exists hourly_pay integer;
+alter table companies add column if not exists num_submits integer;
+alter table companies add column if not exists housing_perk text;
+alter table companies add column if not exists signature_perk text;
+
+alter table companies drop column if exists logo_url;
 alter table companies drop column if exists slug;
 
 alter table companies enable row level security;
+alter table analytics_events enable row level security;
 
 drop policy if exists "Allow public read access" on companies;
 create policy "Allow public read access"
@@ -55,6 +52,8 @@ for select
 using (true);
 
 drop policy if exists "Allow public update access" on companies;
+drop policy if exists "Allow public insert access" on analytics_events;
+drop policy if exists "Allow public read access" on analytics_events;
 
 create or replace function record_company_vote(
   winner_id uuid,
@@ -137,26 +136,5 @@ revoke execute on function record_company_vote(uuid, uuid, integer) from anon;
 revoke execute on function record_company_vote(uuid, uuid, integer) from authenticated;
 grant execute on function record_company_vote(uuid, uuid, integer) to service_role;
 
-with seed_companies (name, slug, logo_variant, rating) as (
-  values
-    ('Google', 'google', 'default', 1200),
-    ('Apple', 'apple', 'light', 1200),
-    ('Microsoft', 'microsoft', 'default', 1200),
-    ('Meta', 'meta', 'default', 1200),
-    ('Netflix', 'netflix', 'default', 1200),
-    ('Stripe', 'stripe', 'default', 1200),
-    ('OpenAI', 'openai', 'light', 1200),
-    ('SpaceX', 'spacex', 'default', 1200),
-    ('Nvidia', 'nvidia', 'light', 1200),
-    ('Vercel', 'vercel', 'light', 1200),
-    ('Airbnb', 'airbnb', 'default', 1200),
-    ('Uber', 'uber', 'light', 1200)
-)
-insert into companies (name, logo_url, rating)
-select
-  name,
-  'https://thesvg.org/icons/' || slug || '/' || logo_variant || '.svg',
-  rating
-from seed_companies
-on conflict (name) do update
-set logo_url = excluded.logo_url;
+-- Company rows are seeded from data/internships.csv with:
+-- npm run seed:internships

@@ -2,12 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "thesvg.org",
+        hostname: "img.logo.dev",
       },
     ],
   },

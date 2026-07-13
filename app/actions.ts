@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type {
   ActionResult,
   Company,
+  LeaderboardData,
   Matchup,
   VoteRatings,
   VoteResponse,
@@ -14,7 +15,7 @@ import { selectRandomMatchup } from "@/utils/matchup";
 import { validateVoteIds } from "@/utils/validation";
 
 const COMPANY_COLUMNS =
-  "id,name,logo_url,rating,votes_won,total_matches,created_at";
+  "id,name,domain,logo_domain,logo_background,hourly_pay,num_submits,housing_perk,signature_perk,rating,votes_won,total_matches,created_at";
 
 async function fetchCompanies(): Promise<ActionResult<Company[]>> {
   try {
@@ -56,14 +57,43 @@ export async function getMatchup(): Promise<ActionResult<Matchup | null>> {
   };
 }
 
-export async function getLeaderboard(): Promise<ActionResult<Company[]>> {
+export async function getLeaderboard(
+  page = 1,
+  pageSize = 20,
+): Promise<ActionResult<LeaderboardData>> {
   try {
     const supabase = createSupabaseAdminClient();
+
+    const { count, error: countError } = await supabase
+      .from("companies")
+      .select("id", { count: "exact", head: true });
+
+    if (countError) {
+      return {
+        ok: false,
+        error: "Could not load the leaderboard from Supabase.",
+      };
+    }
+
+    const sanitizedPageSize = Number.isFinite(pageSize)
+      ? Math.min(Math.max(Math.floor(pageSize), 1), 100)
+      : 20;
+    const requestedPage = Number.isFinite(page) ? Math.floor(page) : 1;
+    const totalCount = count ?? 0;
+    const totalPages = Math.max(
+      1,
+      Math.ceil(totalCount / sanitizedPageSize),
+    );
+    const sanitizedPage = Math.min(Math.max(requestedPage, 1), totalPages);
+    const from = (sanitizedPage - 1) * sanitizedPageSize;
+    const to = from + sanitizedPageSize - 1;
+
     const { data, error } = await supabase
       .from("companies")
       .select(COMPANY_COLUMNS)
       .order("rating", { ascending: false })
-      .order("name", { ascending: true });
+      .order("name", { ascending: true })
+      .range(from, to);
 
     if (error) {
       return {
@@ -74,7 +104,13 @@ export async function getLeaderboard(): Promise<ActionResult<Company[]>> {
 
     return {
       ok: true,
-      data: data ?? [],
+      data: {
+        companies: data ?? [],
+        page: sanitizedPage,
+        pageSize: sanitizedPageSize,
+        totalCount,
+        totalPages,
+      },
     };
   } catch (error) {
     return {

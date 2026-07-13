@@ -1,7 +1,13 @@
 export interface Company extends Record<string, unknown> {
   id: string;
   name: string;
-  logo_url: string;
+  domain: string | null;
+  logo_domain: string | null;
+  logo_background: string | null;
+  hourly_pay: number | null;
+  num_submits: number | null;
+  housing_perk: string | null;
+  signature_perk: string | null;
   rating: number;
   votes_won: number;
   total_matches: number;
@@ -21,6 +27,14 @@ export interface VoteRatings extends Record<string, unknown> {
 export interface VoteResponse {
   ratings: VoteRatings | null;
   nextMatchup: Matchup | null;
+}
+
+export interface LeaderboardData {
+  companies: Company[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 export type ActionResult<T> =

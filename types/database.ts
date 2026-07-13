@@ -11,6 +11,12 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      analytics_events: {
+        Row: AnalyticsEvent;
+        Insert: AnalyticsEventInsert;
+        Update: AnalyticsEventUpdate;
+        Relationships: [];
+      };
       companies: {
         Row: Company;
         Insert: CompanyInsert;
@@ -30,10 +36,43 @@ export interface Database {
   };
 }
 
+export interface AnalyticsEvent extends Record<string, unknown> {
+  id: string;
+  event_type: string;
+  path: string | null;
+  session_id: string | null;
+  metadata: Json;
+  created_at: string;
+}
+
+export interface AnalyticsEventInsert extends Record<string, unknown> {
+  id?: string;
+  event_type: string;
+  path?: string | null;
+  session_id?: string | null;
+  metadata?: Json;
+  created_at?: string;
+}
+
+export interface AnalyticsEventUpdate extends Record<string, unknown> {
+  id?: string;
+  event_type?: string;
+  path?: string | null;
+  session_id?: string | null;
+  metadata?: Json;
+  created_at?: string;
+}
+
 export interface CompanyInsert extends Record<string, unknown> {
   id?: string;
   name: string;
-  logo_url: string;
+  domain?: string | null;
+  logo_domain?: string | null;
+  logo_background?: string | null;
+  hourly_pay?: number | null;
+  num_submits?: number | null;
+  housing_perk?: string | null;
+  signature_perk?: string | null;
   rating?: number;
   votes_won?: number;
   total_matches?: number;
@@ -43,7 +82,13 @@ export interface CompanyInsert extends Record<string, unknown> {
 export interface CompanyUpdate extends Record<string, unknown> {
   id?: string;
   name?: string;
-  logo_url?: string;
+  domain?: string | null;
+  logo_domain?: string | null;
+  logo_background?: string | null;
+  hourly_pay?: number | null;
+  num_submits?: number | null;
+  housing_perk?: string | null;
+  signature_perk?: string | null;
   rating?: number;
   votes_won?: number;
   total_matches?: number;
