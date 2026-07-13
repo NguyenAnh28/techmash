@@ -17,7 +17,7 @@ body {
   min-height: 100vh;
   margin: 0;
   background: #ffffff;
-  color: #000000;
+  color: #0f172a;
 }
 
 a {
@@ -30,4 +30,11 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }

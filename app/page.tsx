@@ -7,27 +7,24 @@ export default async function HomePage() {
   const matchupResult = await getMatchup();
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 lg:py-14">
-      <section className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase text-black">
-            Community ranking
-          </p>
-          <h1 className="mt-2 text-4xl font-medium tracking-normal text-black sm:text-6xl">
-            Who wins?
-          </h1>
-        </div>
-        <div className="rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-normal text-black">
-          <span className="font-medium text-black">Live</span> Elo
-        </div>
+    <main className="mx-auto flex min-h-[calc(100vh-140px)] w-full max-w-5xl flex-col items-center justify-center px-4 py-12">
+      <section className="mb-12 text-center">
+        <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">
+          Community Internship Verdict
+        </p>
+        <h1 className="mt-1 text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
+          Where would you rather intern?
+        </h1>
       </section>
 
       {matchupResult.ok ? (
         <VoteMatchup initialMatchup={matchupResult.data} />
       ) : (
-        <section className="rounded-lg border border-gray-300 bg-white px-6 py-8">
-          <h2 className="text-2xl font-medium text-black">Setup needed</h2>
-          <p className="mt-3 text-sm leading-6 text-black">
+        <section className="w-full max-w-xl rounded-2xl border border-slate-100 bg-white px-6 py-10 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Setup needed
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-500">
             {matchupResult.error}
           </p>
         </section>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { castVote, getMatchup } from "@/app/actions";
-import { CompanyCard } from "@/components/CompanyCard";
+import { MatchupCard } from "@/components/MatchupCard";
 import type { Company, Matchup } from "@/types/company";
 
 interface VoteMatchupProps {
@@ -51,30 +51,34 @@ export function VoteMatchup({ initialMatchup }: VoteMatchupProps) {
 
   if (!matchup) {
     return (
-      <section className="rounded-lg border border-gray-300 bg-white px-6 py-8 text-center">
-        <h2 className="text-2xl font-medium text-black">Not enough companies</h2>
-        <p className="mt-3 text-sm leading-6 text-black">
-          TechMash needs at least two seeded companies before voting can start.
+      <section className="w-full max-w-xl rounded-2xl border border-slate-100 bg-white px-6 py-10 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          Not enough companies
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-slate-500">
+          InternMash needs at least two seeded companies before voting can start.
         </p>
       </section>
     );
   }
 
   return (
-    <section aria-live="polite">
-      <div className="grid gap-5 md:grid-cols-[1fr_auto_1fr] md:items-center">
-        <CompanyCard
+    <section className="w-full" aria-live="polite">
+      <div className="relative grid w-full grid-cols-1 items-center justify-items-center gap-8 md:grid-cols-2">
+        <MatchupCard
           company={matchup.companyA}
           disabled={isSubmitting}
           isSelected={selectedId === matchup.companyA.id}
           onVote={() => handleVote(matchup.companyA, matchup.companyB)}
         />
-        <div className="flex justify-center">
-          <span className="flex size-14 items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-medium text-black">
+
+        <div className="flex justify-center md:absolute md:left-1/2 md:top-1/2 md:z-10 md:-translate-x-1/2 md:-translate-y-1/2">
+          <span className="flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-400 shadow-sm">
             VS
           </span>
         </div>
-        <CompanyCard
+
+        <MatchupCard
           company={matchup.companyB}
           disabled={isSubmitting}
           isSelected={selectedId === matchup.companyB.id}
@@ -82,7 +86,7 @@ export function VoteMatchup({ initialMatchup }: VoteMatchupProps) {
         />
       </div>
       {error ? (
-        <p className="mt-6 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-normal text-black">
+        <p className="mx-auto mt-6 max-w-xl rounded-xl border border-rose-100 bg-white px-4 py-3 text-center text-sm font-medium text-rose-600 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           {error}
         </p>
       ) : null}

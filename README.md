@@ -1,6 +1,6 @@
-# TechMash
+# InternMash
 
-TechMash is a Next.js and Supabase app where visitors vote between two tech companies. Votes update Elo ratings through an atomic Postgres function, and the leaderboard shows the global ranking.
+InternMash is a Next.js and Supabase app where visitors choose where they would rather intern. Votes update Elo ratings through an atomic Postgres function, and the leaderboard shows the global internship ranking.
 
 ## Quick Start
 
