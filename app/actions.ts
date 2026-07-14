@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/lib/errors";
+import { COMPANY_COLUMNS } from "@/lib/company-select";
+import { getCachedLeaderboardSnapshot } from "@/lib/leaderboard";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type {
   ActionResult,
@@ -12,10 +14,11 @@ import type {
   VoteResponse,
 } from "@/types/company";
 import { selectRandomMatchup } from "@/utils/matchup";
+import {
+  getCurrentLeaderboardRefreshWindow,
+  paginateLeaderboardSnapshot,
+} from "@/utils/leaderboard";
 import { validateVoteIds } from "@/utils/validation";
-
-const COMPANY_COLUMNS =
-  "id,name,domain,logo_domain,logo_background,hourly_pay,num_submits,housing_perk,signature_perk,rating,votes_won,total_matches,created_at";
 
 async function fetchCompanies(): Promise<ActionResult<Company[]>> {
   try {
@@ -62,55 +65,19 @@ export async function getLeaderboard(
   pageSize = 20,
 ): Promise<ActionResult<LeaderboardData>> {
   try {
-    const supabase = createSupabaseAdminClient();
-
-    const { count, error: countError } = await supabase
-      .from("companies")
-      .select("id", { count: "exact", head: true });
-
-    if (countError) {
-      return {
-        ok: false,
-        error: "Could not load the leaderboard from Supabase.",
-      };
-    }
-
-    const sanitizedPageSize = Number.isFinite(pageSize)
-      ? Math.min(Math.max(Math.floor(pageSize), 1), 100)
-      : 20;
-    const requestedPage = Number.isFinite(page) ? Math.floor(page) : 1;
-    const totalCount = count ?? 0;
-    const totalPages = Math.max(
-      1,
-      Math.ceil(totalCount / sanitizedPageSize),
+    const refreshWindow = getCurrentLeaderboardRefreshWindow();
+    const snapshot = await getCachedLeaderboardSnapshot(
+      refreshWindow.lastRefreshedAt,
     );
-    const sanitizedPage = Math.min(Math.max(requestedPage, 1), totalPages);
-    const from = (sanitizedPage - 1) * sanitizedPageSize;
-    const to = from + sanitizedPageSize - 1;
-
-    const { data, error } = await supabase
-      .from("companies")
-      .select(COMPANY_COLUMNS)
-      .order("rating", { ascending: false })
-      .order("name", { ascending: true })
-      .range(from, to);
-
-    if (error) {
-      return {
-        ok: false,
-        error: "Could not load the leaderboard from Supabase.",
-      };
-    }
 
     return {
       ok: true,
-      data: {
-        companies: data ?? [],
-        page: sanitizedPage,
-        pageSize: sanitizedPageSize,
-        totalCount,
-        totalPages,
-      },
+      data: paginateLeaderboardSnapshot(
+        snapshot.companies,
+        refreshWindow.lastRefreshedAt,
+        page,
+        pageSize,
+      ),
     };
   } catch (error) {
     return {
@@ -149,7 +116,6 @@ export async function castVote(
     }
 
     revalidatePath("/");
-    revalidatePath("/leaderboard");
 
     const companies = await fetchCompanies();
     const nextMatchup = companies.ok ? selectRandomMatchup(companies.data) : null;

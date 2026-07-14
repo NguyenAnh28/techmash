@@ -35,6 +35,10 @@ export interface LeaderboardData {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  lastRefreshedAt: string;
+  nextRefreshAt: string;
+  refreshIntervalSeconds: number;
+  refreshTimeZone: string;
 }
 
 export type ActionResult<T> =
