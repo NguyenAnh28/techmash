@@ -79,6 +79,8 @@ returns table (
 language plpgsql
 security definer
 set search_path = public
+set lock_timeout = '750ms'
+set statement_timeout = '3000ms'
 as $$
 declare
   winner_current companies%rowtype;
@@ -147,6 +149,24 @@ revoke execute on function record_company_vote(uuid, uuid, integer) from public;
 revoke execute on function record_company_vote(uuid, uuid, integer) from anon;
 revoke execute on function record_company_vote(uuid, uuid, integer) from authenticated;
 grant execute on function record_company_vote(uuid, uuid, integer) to service_role;
+
+create or replace function get_random_matchup()
+returns setof companies
+language sql
+security definer
+set search_path = public
+set statement_timeout = '1500ms'
+as $$
+  select *
+  from companies
+  order by random()
+  limit 2;
+$$;
+
+revoke execute on function get_random_matchup() from public;
+revoke execute on function get_random_matchup() from anon;
+revoke execute on function get_random_matchup() from authenticated;
+grant execute on function get_random_matchup() to service_role;
 
 -- Company rows are seeded from data/internships.csv with:
 -- npm run seed:internships

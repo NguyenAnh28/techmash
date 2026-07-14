@@ -32,6 +32,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      get_random_matchup: {
+        Args: Record<string, never>;
+        Returns: Company[];
+      };
       record_company_vote: {
         Args: RecordCompanyVoteArgs;
         Returns: VoteRatings[];

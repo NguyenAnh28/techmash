@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Company } from "@/types/company";
-import { selectRandomMatchup } from "@/utils/matchup";
+import {
+  createMatchupFromCompanies,
+  selectRandomMatchup,
+} from "@/utils/matchup";
 
 const companies: Company[] = [
   {
@@ -64,5 +67,20 @@ describe("selectRandomMatchup", () => {
     expect(matchup).not.toBeNull();
     expect(matchup?.companyA.id).toBe("company-a");
     expect(matchup?.companyB.id).toBe("company-c");
+  });
+});
+
+describe("createMatchupFromCompanies", () => {
+  it("returns null when the RPC result does not contain two distinct companies", () => {
+    expect(createMatchupFromCompanies([])).toBeNull();
+    expect(createMatchupFromCompanies([companies[0]])).toBeNull();
+    expect(createMatchupFromCompanies([companies[0], companies[0]])).toBeNull();
+  });
+
+  it("maps two distinct companies into the matchup shape", () => {
+    expect(createMatchupFromCompanies([companies[1], companies[2]])).toEqual({
+      companyA: companies[1],
+      companyB: companies[2],
+    });
   });
 });

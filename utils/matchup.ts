@@ -1,5 +1,18 @@
 import type { Company, Matchup } from "@/types/company";
 
+export function createMatchupFromCompanies(companies: Company[]): Matchup | null {
+  const [companyA, companyB] = companies;
+
+  if (!companyA || !companyB || companyA.id === companyB.id) {
+    return null;
+  }
+
+  return {
+    companyA,
+    companyB,
+  };
+}
+
 export function selectRandomMatchup(
   companies: Company[],
   random: () => number = Math.random,
@@ -15,8 +28,5 @@ export function selectRandomMatchup(
     idx2 = Math.floor(random() * companies.length);
   }
 
-  return {
-    companyA: companies[idx1],
-    companyB: companies[idx2],
-  };
+  return createMatchupFromCompanies([companies[idx1], companies[idx2]]);
 }

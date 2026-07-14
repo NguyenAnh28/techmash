@@ -1,43 +1,50 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/lib/errors";
-import { COMPANY_COLUMNS } from "@/lib/company-select";
 import { getCachedLeaderboardSnapshot } from "@/lib/leaderboard";
+import { enforceVoteRateLimit } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type {
   ActionResult,
-  Company,
   LeaderboardData,
   Matchup,
   VoteRatings,
   VoteResponse,
 } from "@/types/company";
-import { selectRandomMatchup } from "@/utils/matchup";
+import { createMatchupFromCompanies } from "@/utils/matchup";
 import {
   getCurrentLeaderboardRefreshWindow,
   paginateLeaderboardSnapshot,
 } from "@/utils/leaderboard";
 import { validateVoteIds } from "@/utils/validation";
+import { getVoteDatabaseErrorMessage } from "@/utils/vote-errors";
 
-async function fetchCompanies(): Promise<ActionResult<Company[]>> {
+async function getRequestRateLimitKey() {
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get("x-forwarded-for");
+  const forwardedIp = forwardedFor?.split(",")[0]?.trim();
+  const realIp = requestHeaders.get("x-real-ip")?.trim();
+
+  return forwardedIp || realIp || "unknown";
+}
+
+async function fetchRandomMatchup(): Promise<ActionResult<Matchup | null>> {
   try {
     const supabase = createSupabaseAdminClient();
-    const { data, error } = await supabase
-      .from("companies")
-      .select(COMPANY_COLUMNS)
-      .order("name", { ascending: true });
+    const { data, error } = await supabase.rpc("get_random_matchup");
 
     if (error) {
       return {
         ok: false,
-        error: "Could not load companies from Supabase.",
+        error: "Could not load a matchup from Supabase.",
       };
     }
 
     return {
       ok: true,
-      data: data ?? [],
+      data: createMatchupFromCompanies(data ?? []),
     };
   } catch (error) {
     return {
@@ -48,16 +55,7 @@ async function fetchCompanies(): Promise<ActionResult<Company[]>> {
 }
 
 export async function getMatchup(): Promise<ActionResult<Matchup | null>> {
-  const result = await fetchCompanies();
-
-  if (!result.ok) {
-    return result;
-  }
-
-  return {
-    ok: true,
-    data: selectRandomMatchup(result.data),
-  };
+  return fetchRandomMatchup();
 }
 
 export async function getLeaderboard(
@@ -101,6 +99,15 @@ export async function castVote(
   }
 
   try {
+    const rateLimit = await enforceVoteRateLimit(await getRequestRateLimitKey());
+
+    if (!rateLimit.ok) {
+      return {
+        ok: false,
+        error: rateLimit.error ?? "Too many vote attempts. Please try again.",
+      };
+    }
+
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.rpc("record_company_vote", {
       winner_id: winnerId,
@@ -111,14 +118,14 @@ export async function castVote(
     if (error) {
       return {
         ok: false,
-        error: "Could not record this vote.",
+        error: getVoteDatabaseErrorMessage(error),
       };
     }
 
     revalidatePath("/");
 
-    const companies = await fetchCompanies();
-    const nextMatchup = companies.ok ? selectRandomMatchup(companies.data) : null;
+    const matchup = await fetchRandomMatchup();
+    const nextMatchup = matchup.ok ? matchup.data : null;
     const ratings: VoteRatings | null = data?.[0] ?? null;
 
     return {
