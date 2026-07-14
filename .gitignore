@@ -21,3 +21,11 @@ pnpm-debug.log*
 
 # system
 .DS_Store
+
+# local AI / agent guidance
+agent.md
+AGENTS.md
+docs/agent.md
+*.prompt.md
+prompts/
+.codex/
