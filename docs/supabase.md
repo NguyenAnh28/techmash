@@ -87,6 +87,16 @@ It:
 - Updates winner and loser counters.
 - Returns the new ratings.
 
+The function also uses short database timeouts. `lock_timeout` keeps hot company rows from queueing for too long, and `statement_timeout` prevents a slow vote transaction from running until the serverless request times out.
+
+Only the Supabase service role is granted execute permission. The browser never calls this RPC directly.
+
+## Matchup RPC
+
+The function `get_random_matchup()` returns two random company rows.
+
+The voting page calls this through a Server Action instead of downloading the full `companies` table and picking two rows in app memory.
+
 Only the Supabase service role is granted execute permission. The browser never calls this RPC directly.
 
 ## Server Access
@@ -130,5 +140,7 @@ Vercel needs the same environment variables as local development:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_LOGO_DEV_TOKEN`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
 
 The database schema must already exist in Supabase before the deployed app can record votes or analytics.

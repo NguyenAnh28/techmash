@@ -1,0 +1,40 @@
+{
+  "label": "matchmaking-theoretical-comparison",
+  "generatedAt": "2026-07-14T00:00:00.000Z",
+  "dataset": {
+    "source": "data/internships.csv",
+    "seededCompanyCountAfterConfiguredRemovals": 298,
+    "estimatedAverageCompanyJsonBytes": 357
+  },
+  "methods": [
+    {
+      "name": "fetch-all-companies-in-app",
+      "description": "Next.js asks Supabase for every company row, parses the full JSON payload, then picks two random companies in app memory.",
+      "networkPayloadShape": "O(N)",
+      "appCpuParsingShape": "O(N)",
+      "databaseSerializationShape": "O(N)",
+      "estimatedReturnedPayloadBytes": 106569,
+      "usefulRows": 2,
+      "discardedRows": 296,
+      "throughputLimit": "Bound by full-table serialization, network transfer, and Node JSON parsing on every matchup request."
+    },
+    {
+      "name": "postgres-rpc-random-sampling",
+      "description": "Next.js calls get_random_matchup(); Postgres samples two companies and Supabase returns only those rows.",
+      "networkPayloadShape": "O(1)",
+      "appCpuParsingShape": "O(1)",
+      "databaseSerializationShape": "O(1) returned rows",
+      "databaseSamplingShape": "O(N) with ORDER BY random() for the v1 implementation",
+      "estimatedReturnedPayloadBytes": 733,
+      "usefulRows": 2,
+      "discardedRows": 0,
+      "throughputLimit": "Bound mostly by the database random sampling step. This is acceptable for the current dataset, but should be revisited for very large company tables."
+    }
+  ],
+  "comparison": {
+    "estimatedPayloadReductionMultiplier": 145.4,
+    "estimatedPayloadReductionPercent": 99.31,
+    "mainLatencyWin": "The optimized path removes almost all unnecessary network transfer and Node JSON parsing from matchup requests.",
+    "mainDatabaseTradeoff": "ORDER BY random() still asks Postgres to consider the table, so the next scaling step would be an indexed or sampled random strategy if the company table grows into tens of thousands of rows."
+  }
+}

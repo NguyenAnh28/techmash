@@ -27,13 +27,13 @@ It tracks:
 
 ## User Flow
 
-1. The server calls `getMatchup()` to fetch two different companies.
+1. The server calls `getMatchup()` to ask Postgres for two random companies.
 2. The page renders both companies side by side on desktop and stacked on smaller screens.
 3. The user clicks one card.
 4. The clicked company becomes the winner and the other company becomes the loser.
 5. `castVote(winnerId, loserId)` runs on the server.
 6. The database updates both companies in one atomic operation.
-7. The app fetches another matchup.
+7. The app asks Postgres for another two-company matchup.
 8. The public leaderboard keeps using its current cached snapshot until the next refresh window.
 
 ## Vote Safety
@@ -47,6 +47,16 @@ The server action also validates:
 - Both companies still exist in the database.
 
 The database RPC repeats the important validation before writing, so invalid requests do not change rankings.
+
+Votes are also rate limited on the server side. The launch default is 40 votes per minute per IP address, tracked through Upstash Redis so the limit works across Vercel serverless instances.
+
+The vote transaction has short database timeouts. If a popular company row is locked by too many concurrent votes, the request fails quickly with a friendly retry message instead of waiting until the serverless function times out.
+
+## Matchup Selection
+
+Matchup selection happens in Supabase through the `get_random_matchup()` RPC.
+
+The old MVP path loaded every company row into the Next.js server and picked two companies in memory. The current path lets Postgres sample two rows and sends only those two rows back to the app. This keeps the voting loop lighter as the company table grows.
 
 ## Card Metadata
 
