@@ -124,6 +124,18 @@ export default async function LeaderboardPage({
                       Next
                     </span>
                   )}
+                  {leaderboard.page < leaderboard.totalPages ? (
+                    <Link
+                      href={getLeaderboardPageHref(leaderboard.totalPages)}
+                      className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+                    >
+                      Last
+                    </Link>
+                  ) : (
+                    <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
+                      Last
+                    </span>
+                  )}
                 </div>
               </nav>
             ) : null}
