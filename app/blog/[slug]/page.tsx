@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { blogPosts, getBlogPost } from "@/lib/blog";
+import { type BlogBodyBlock, blogPosts, getBlogPost } from "@/lib/blog";
 
 interface BlogArticlePageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+function isFormulaBlock(
+  block: BlogBodyBlock,
+): block is Extract<BlogBodyBlock, { type: "formula" }> {
+  return typeof block === "object" && block.type === "formula";
 }
 
 export function generateStaticParams() {
@@ -46,8 +52,14 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
       <article className="mx-auto w-full max-w-4xl px-5 py-16 sm:px-6 lg:py-24">
         <Link
           href="/blog"
-          className="mb-16 inline-flex text-xs font-bold uppercase tracking-[0.32em] text-slate-400 transition-colors hover:text-black"
+          className="group mb-16 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.32em] text-slate-400 transition-colors hover:text-black"
         >
+          <span
+            aria-hidden="true"
+            className="text-base transition-transform duration-200 group-hover:-translate-x-1"
+          >
+            ←
+          </span>
           Back to notes
         </Link>
 
@@ -70,14 +82,36 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
         </header>
 
         <div className="mt-12 space-y-7">
-          {post.body.map((paragraph) => (
-            <p
-              key={paragraph}
-              className="text-lg font-medium leading-9 text-neutral-700"
-            >
-              {paragraph}
-            </p>
-          ))}
+          {post.body.map((block, index) => {
+            if (isFormulaBlock(block)) {
+              return (
+                <figure
+                  key={`${post.slug}-formula-${index}`}
+                  className="my-10 rounded-3xl border border-black/[0.04] bg-neutral-50 px-5 py-6 text-center shadow-[0_18px_60px_rgba(15,23,42,0.05)] sm:px-8"
+                >
+                  <div className="space-y-4 overflow-x-auto font-serif text-2xl italic tracking-normal text-black sm:text-3xl">
+                    {block.lines.map((line) => (
+                      <p key={line} className="whitespace-nowrap">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                  <figcaption className="mx-auto mt-5 max-w-xl text-sm font-medium leading-6 text-neutral-500">
+                    {block.caption}
+                  </figcaption>
+                </figure>
+              );
+            }
+
+            return (
+              <p
+                key={`${post.slug}-paragraph-${index}`}
+                className="text-lg font-medium leading-9 text-neutral-700"
+              >
+                {block}
+              </p>
+            );
+          })}
         </div>
       </article>
     </main>
