@@ -8,17 +8,16 @@ import {
 } from "react";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { CompanyProfileCard } from "@/components/CompanyProfileCard";
-import type { Company } from "@/types/company";
+import type { LeaderboardCompany } from "@/types/company";
 import { formatHourlyPay, formatLocation } from "@/utils/company-format";
 import { calculateWinRate } from "@/utils/stats";
 
 interface LeaderboardTableProps {
-  companies: Company[];
-  rankOffset?: number;
+  companies: LeaderboardCompany[];
 }
 
 interface SelectedCompany {
-  company: Company;
+  company: LeaderboardCompany;
   rank: number;
   winRate: number;
 }
@@ -136,16 +135,64 @@ function CompanyDetailModal({
   );
 }
 
+function RankMovementTag({
+  rankDelta,
+}: {
+  rankDelta: number | null;
+}) {
+  if (rankDelta === null) {
+    return (
+      <span className="inline-flex min-w-10 justify-center rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+        New
+      </span>
+    );
+  }
+
+  if (rankDelta > 0) {
+    return (
+      <span
+        aria-label={`Moved up ${rankDelta} ranks`}
+        className="inline-flex min-w-10 items-center justify-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-600"
+      >
+        <span aria-hidden="true">▲</span>
+        {rankDelta}
+      </span>
+    );
+  }
+
+  if (rankDelta < 0) {
+    const movedDown = Math.abs(rankDelta);
+
+    return (
+      <span
+        aria-label={`Moved down ${movedDown} ranks`}
+        className="inline-flex min-w-10 items-center justify-center gap-1 rounded-full bg-red-50 px-2 py-1 text-[10px] font-bold text-red-500"
+      >
+        <span aria-hidden="true">▼</span>
+        {movedDown}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-label="Rank unchanged"
+      className="inline-flex min-w-10 justify-center rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-bold text-slate-400"
+    >
+      -
+    </span>
+  );
+}
+
 export function LeaderboardTable({
   companies,
-  rankOffset = 0,
 }: LeaderboardTableProps) {
   const [selectedCompany, setSelectedCompany] =
     useState<SelectedCompany | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   function handleOpenCompany(
-    company: Company,
+    company: LeaderboardCompany,
     rank: number,
     winRate: number,
     event: MouseEvent<HTMLButtonElement>,
@@ -194,20 +241,25 @@ export function LeaderboardTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {companies.map((company, index) => {
+              {companies.map((company) => {
                 const winRate = calculateWinRate(
                   company.votes_won,
                   company.total_matches,
                 );
-                const rank = rankOffset + index + 1;
+                const rank = company.rank;
 
                 return (
                   <tr
                     key={company.id}
                     className="bg-white text-neutral-500 transition-colors hover:bg-neutral-50/70"
                   >
-                    <td className="py-6 pl-3 pr-4 text-lg font-normal text-black">
-                      #{rank}
+                    <td className="py-6 pl-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-normal text-black">
+                          #{rank}
+                        </span>
+                        <RankMovementTag rankDelta={company.rankDelta} />
+                      </div>
                     </td>
                     <td className="py-6 pl-8 pr-4">
                       <button

@@ -85,7 +85,6 @@ export default async function LeaderboardPage({
           <>
             <LeaderboardTable
               companies={leaderboard.companies}
-              rankOffset={(leaderboard.page - 1) * leaderboard.pageSize}
             />
             {leaderboard.totalPages > 1 ? (
               <nav
