@@ -49,6 +49,19 @@ Important columns:
 
 The public stats page only shows aggregate results, not raw event rows.
 
+## Leaderboard Snapshots Table
+
+`leaderboard_snapshots` stores one compact rank map per global refresh window.
+
+Important columns:
+
+- `window_start`: primary key for the 5-minute leaderboard window.
+- `rankings`: JSON object mapping company IDs to one-based ranks.
+- `total_count`: number of companies in that snapshot.
+- `created_at`: row creation time.
+
+The app uses this table to compare the current cached leaderboard snapshot against the previous snapshot and render rank movement tags.
+
 ## Row Level Security
 
 RLS is enabled.
@@ -58,6 +71,8 @@ The `companies` table allows public read access so pages can show leaderboard an
 Public update access is intentionally not enabled. Users do not write directly to company rows from the browser.
 
 Analytics rows also do not have a public read policy. Events are inserted through the server API route.
+
+Leaderboard snapshot rows also do not have a public read policy. They are written and read by server-side leaderboard code only.
 
 ## Vote RPC
 

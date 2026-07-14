@@ -17,6 +17,7 @@ Leaderboard data is loaded through `getLeaderboard()` in `app/actions.ts`.
 The action returns:
 
 - A page of company rows.
+- The current rank, previous rank, and rank delta for each row.
 - The total company count.
 - Pagination metadata.
 - Snapshot metadata.
@@ -24,6 +25,10 @@ The action returns:
 The full sorted list is cached by 5-minute global windows. Each request slices that cached list in memory for the requested page. This avoids sorting and reading the database on every leaderboard request.
 
 Rows are sorted by rating from highest to lowest when the snapshot is generated. The page size is 20 companies.
+
+Each generated snapshot is also written to Supabase as a compact rank map. The next snapshot compares against the previous rank map to show whether a company moved up, moved down, stayed in place, or is new to the ranking.
+
+This adds one previous-snapshot read and one current-snapshot upsert when a new 5-minute window is generated. Warm leaderboard requests still use the cached snapshot and slice it in memory.
 
 ## Refresh Cadence
 
@@ -45,13 +50,21 @@ The app does not auto-refresh every open browser tab at the same second. That av
 
 Each row shows:
 
-- Rank.
+- Rank and movement tag.
 - Company logo and name.
 - Elo rating.
+- Salary.
+- Location.
 - Win rate.
-- Vote record.
 
 The table is wrapped in a rounded bordered container so it feels consistent with the voting cards. Rows use light separators, subtle hover states, and soft shadows around the full leaderboard panel.
+
+Movement tags use the previous 5-minute global snapshot:
+
+- Green upward triangle: company moved up.
+- Red downward triangle: company moved down.
+- Muted dash: rank did not change.
+- Muted `New`: no previous rank was available.
 
 ## Pagination
 
@@ -75,7 +88,6 @@ The modal reuses `CompanyProfileCard`, which is the same visual body used by the
 The modal adds leaderboard context:
 
 - Current rank.
-- Elo rating.
 - Wins.
 - Total matches.
 - Win rate.
