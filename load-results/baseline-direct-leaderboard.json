@@ -1,0 +1,74 @@
+{
+  "label": "baseline-direct-leaderboard",
+  "targetUrl": "http://localhost:3100/leaderboard?page=1",
+  "durationSeconds": 6,
+  "warmupCount": 5,
+  "generatedAt": "2026-07-14T07:10:21.177Z",
+  "results": [
+    {
+      "concurrency": 50,
+      "durationSeconds": 6,
+      "totalRequests": 149,
+      "successfulRequests": 149,
+      "requestsPerSecond": 19.11,
+      "p50Ms": 2272.91,
+      "p95Ms": 3697.57,
+      "p99Ms": 4162.52,
+      "maxMs": 4170.85,
+      "non2xx": 0,
+      "errors": 0
+    },
+    {
+      "concurrency": 100,
+      "durationSeconds": 6,
+      "totalRequests": 178,
+      "successfulRequests": 178,
+      "requestsPerSecond": 21.26,
+      "p50Ms": 3904.93,
+      "p95Ms": 7052.12,
+      "p99Ms": 7138.45,
+      "maxMs": 7154.58,
+      "non2xx": 0,
+      "errors": 0
+    },
+    {
+      "concurrency": 250,
+      "durationSeconds": 6,
+      "totalRequests": 250,
+      "successfulRequests": 250,
+      "requestsPerSecond": 21.27,
+      "p50Ms": 8985.7,
+      "p95Ms": 11494.74,
+      "p99Ms": 11741.77,
+      "maxMs": 11748.06,
+      "non2xx": 0,
+      "errors": 0
+    },
+    {
+      "concurrency": 500,
+      "durationSeconds": 6,
+      "totalRequests": 506,
+      "successfulRequests": 506,
+      "requestsPerSecond": 21.91,
+      "p50Ms": 17114.16,
+      "p95Ms": 22526.79,
+      "p99Ms": 22987.9,
+      "maxMs": 23080.94,
+      "non2xx": 0,
+      "errors": 0
+    },
+    {
+      "concurrency": 1000,
+      "durationSeconds": 6,
+      "totalRequests": 1001,
+      "successfulRequests": 1001,
+      "requestsPerSecond": 21.87,
+      "p50Ms": 31900.74,
+      "p95Ms": 44641.17,
+      "p99Ms": 45565.67,
+      "maxMs": 45744.9,
+      "non2xx": 0,
+      "errors": 0
+    }
+  ]
+}

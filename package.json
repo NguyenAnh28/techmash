@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "load:leaderboard": "node scripts/load-leaderboard.mjs",
     "seed:internships": "node --experimental-strip-types supabase/seed.ts",
     "seed:internships:dry": "node --experimental-strip-types supabase/seed.ts --dry-run",
     "typecheck": "tsc --noEmit",
