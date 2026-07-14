@@ -6,22 +6,40 @@ export function Footer() {
           © 2026 InternMash. Crowdsourcing the ultimate tech internship index.
           Data processed via Elo matchmaking.
         </p>
-        <a
-          href="https://github.com/NguyenAnh28/techmash"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Open InternMash on GitHub"
-          className="inline-flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="size-4"
-            fill="currentColor"
+        <div className="flex items-center gap-2">
+          <a
+            href="https://github.com/NguyenAnh28/techmash"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open InternMash on GitHub"
+            className="inline-flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
           >
-            <path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.36 6.84 9.71.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.36 9.36 0 0 1 12 6.98c.85 0 1.71.12 2.51.35 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.08 10.08 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" />
-          </svg>
-        </a>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="size-4"
+              fill="currentColor"
+            >
+              <path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.36 6.84 9.71.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.36 9.36 0 0 1 12 6.98c.85 0 1.71.12 2.51.35 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.08 10.08 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" />
+            </svg>
+          </a>
+          <a
+            href="https://www.linkedin.com/company/internmash/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open InternMash on LinkedIn"
+            className="inline-flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="size-4"
+              fill="currentColor"
+            >
+              <path d="M6.94 8.98H3.75v10.28h3.19V8.98ZM5.35 4a1.85 1.85 0 1 0 0 3.7 1.85 1.85 0 0 0 0-3.7Zm13.89 9.37c0-3.1-1.65-4.54-3.86-4.54a3.32 3.32 0 0 0-3 1.65h-.04v-1.5H9.29v10.28h3.19v-5.09c0-1.34.25-2.64 1.91-2.64 1.64 0 1.66 1.53 1.66 2.72v5.01h3.19v-5.89Z" />
+            </svg>
+          </a>
+        </div>
       </div>
     </footer>
   );
