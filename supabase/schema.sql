@@ -25,11 +25,21 @@ create table if not exists analytics_events (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+create table if not exists leaderboard_snapshots (
+  window_start timestamp with time zone primary key,
+  rankings jsonb not null,
+  total_count integer not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 create index if not exists analytics_events_event_type_created_at_idx
 on analytics_events (event_type, created_at desc);
 
 create index if not exists analytics_events_created_at_idx
 on analytics_events (created_at desc);
+
+create index if not exists leaderboard_snapshots_created_at_idx
+on leaderboard_snapshots (created_at desc);
 
 alter table companies add column if not exists domain text;
 alter table companies add column if not exists logo_domain text;
@@ -44,6 +54,7 @@ alter table companies drop column if exists slug;
 
 alter table companies enable row level security;
 alter table analytics_events enable row level security;
+alter table leaderboard_snapshots enable row level security;
 
 drop policy if exists "Allow public read access" on companies;
 create policy "Allow public read access"
@@ -54,6 +65,7 @@ using (true);
 drop policy if exists "Allow public update access" on companies;
 drop policy if exists "Allow public insert access" on analytics_events;
 drop policy if exists "Allow public read access" on analytics_events;
+drop policy if exists "Allow public read access" on leaderboard_snapshots;
 
 create or replace function record_company_vote(
   winner_id uuid,

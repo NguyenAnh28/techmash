@@ -1,4 +1,8 @@
-import type { Company, LeaderboardData } from "@/types/company";
+import type {
+  Company,
+  LeaderboardCompany,
+  LeaderboardData,
+} from "@/types/company";
 
 export const LEADERBOARD_REFRESH_INTERVAL_SECONDS = 300;
 export const LEADERBOARD_REFRESH_TIME_ZONE = "America/Los_Angeles";
@@ -45,8 +49,38 @@ export function getLeaderboardRefreshMetadata(
   };
 }
 
-export function paginateLeaderboardSnapshot(
+export type LeaderboardRankings = Record<string, number>;
+
+export function createLeaderboardRankings(
+  companies: Pick<Company, "id">[],
+): LeaderboardRankings {
+  return companies.reduce<LeaderboardRankings>((rankings, company, index) => {
+    rankings[company.id] = index + 1;
+    return rankings;
+  }, {});
+}
+
+export function annotateLeaderboardRanks(
   companies: Company[],
+  previousRankings: LeaderboardRankings | null,
+): LeaderboardCompany[] {
+  return companies.map((company, index) => {
+    const rank = index + 1;
+    const previousRank = previousRankings?.[company.id] ?? null;
+    const rankDelta =
+      previousRank === null ? null : previousRank - rank;
+
+    return {
+      ...company,
+      rank,
+      previousRank,
+      rankDelta,
+    };
+  });
+}
+
+export function paginateLeaderboardSnapshot(
+  companies: LeaderboardCompany[],
   lastRefreshedAt: string,
   page = 1,
   pageSize = 20,

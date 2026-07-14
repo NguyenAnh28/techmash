@@ -14,6 +14,12 @@ export interface Company extends Record<string, unknown> {
   created_at: string;
 }
 
+export interface LeaderboardCompany extends Company {
+  rank: number;
+  previousRank: number | null;
+  rankDelta: number | null;
+}
+
 export interface Matchup {
   companyA: Company;
   companyB: Company;
@@ -30,7 +36,7 @@ export interface VoteResponse {
 }
 
 export interface LeaderboardData {
-  companies: Company[];
+  companies: LeaderboardCompany[];
   page: number;
   pageSize: number;
   totalCount: number;

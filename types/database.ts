@@ -23,6 +23,12 @@ export interface Database {
         Update: CompanyUpdate;
         Relationships: [];
       };
+      leaderboard_snapshots: {
+        Row: LeaderboardSnapshotRow;
+        Insert: LeaderboardSnapshotInsert;
+        Update: LeaderboardSnapshotUpdate;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -92,6 +98,27 @@ export interface CompanyUpdate extends Record<string, unknown> {
   rating?: number;
   votes_won?: number;
   total_matches?: number;
+  created_at?: string;
+}
+
+export interface LeaderboardSnapshotRow extends Record<string, unknown> {
+  window_start: string;
+  rankings: Json;
+  total_count: number;
+  created_at: string;
+}
+
+export interface LeaderboardSnapshotInsert extends Record<string, unknown> {
+  window_start: string;
+  rankings: Json;
+  total_count: number;
+  created_at?: string;
+}
+
+export interface LeaderboardSnapshotUpdate extends Record<string, unknown> {
+  window_start?: string;
+  rankings?: Json;
+  total_count?: number;
   created_at?: string;
 }
 

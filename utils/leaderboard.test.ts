@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Company } from "@/types/company";
 import {
+  annotateLeaderboardRanks,
+  createLeaderboardRankings,
   getCurrentLeaderboardRefreshWindow,
   getLeaderboardRefreshMetadata,
   paginateLeaderboardSnapshot,
@@ -55,8 +57,9 @@ describe("getCurrentLeaderboardRefreshWindow", () => {
 
 describe("paginateLeaderboardSnapshot", () => {
   it("returns one page from the cached full leaderboard snapshot", () => {
-    const companies = Array.from({ length: 45 }, (_, index) =>
-      createCompany(index + 1),
+    const companies = annotateLeaderboardRanks(
+      Array.from({ length: 45 }, (_, index) => createCompany(index + 1)),
+      null,
     );
 
     const page = paginateLeaderboardSnapshot(
@@ -76,8 +79,9 @@ describe("paginateLeaderboardSnapshot", () => {
   });
 
   it("clamps invalid page requests to the available page range", () => {
-    const companies = Array.from({ length: 4 }, (_, index) =>
-      createCompany(index + 1),
+    const companies = annotateLeaderboardRanks(
+      Array.from({ length: 4 }, (_, index) => createCompany(index + 1)),
+      null,
     );
 
     const page = paginateLeaderboardSnapshot(
@@ -91,6 +95,70 @@ describe("paginateLeaderboardSnapshot", () => {
     expect(page.companies.map((company) => company.id)).toEqual([
       "company-3",
       "company-4",
+    ]);
+  });
+});
+
+describe("createLeaderboardRankings", () => {
+  it("maps company ids to one-based ranks", () => {
+    expect(
+      createLeaderboardRankings([
+        createCompany(10),
+        createCompany(20),
+      ]),
+    ).toEqual({
+      "company-10": 1,
+      "company-20": 2,
+    });
+  });
+});
+
+describe("annotateLeaderboardRanks", () => {
+  it("marks companies that moved up, moved down, stayed still, or are new", () => {
+    const companies = [
+      createCompany(3),
+      createCompany(1),
+      createCompany(2),
+      createCompany(4),
+    ];
+    const previousRankings = {
+      "company-1": 1,
+      "company-2": 3,
+      "company-3": 4,
+    };
+
+    expect(
+      annotateLeaderboardRanks(companies, previousRankings).map((company) => ({
+        id: company.id,
+        rank: company.rank,
+        previousRank: company.previousRank,
+        rankDelta: company.rankDelta,
+      })),
+    ).toEqual([
+      {
+        id: "company-3",
+        rank: 1,
+        previousRank: 4,
+        rankDelta: 3,
+      },
+      {
+        id: "company-1",
+        rank: 2,
+        previousRank: 1,
+        rankDelta: -1,
+      },
+      {
+        id: "company-2",
+        rank: 3,
+        previousRank: 3,
+        rankDelta: 0,
+      },
+      {
+        id: "company-4",
+        rank: 4,
+        previousRank: null,
+        rankDelta: null,
+      },
     ]);
   });
 });
