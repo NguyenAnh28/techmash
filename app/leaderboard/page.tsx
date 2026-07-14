@@ -1,4 +1,5 @@
 import { getLeaderboard } from "@/app/actions";
+import { LeaderboardRefreshTimer } from "@/components/LeaderboardRefreshTimer";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import Link from "next/link";
 
@@ -62,13 +63,19 @@ export default async function LeaderboardPage({
           </p>
         </div>
         {leaderboard ? (
-          <div className="shrink-0 border-y border-slate-200 py-4 text-left md:text-right">
+          <div className="w-full shrink-0 border-y border-slate-200 py-4 text-left md:w-64 md:text-right">
             <p className="text-4xl font-normal tracking-[-0.04em] text-black">
               {leaderboard.totalCount}
             </p>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.32em] text-slate-400">
               Companies
             </p>
+            <LeaderboardRefreshTimer
+              lastRefreshedAt={leaderboard.lastRefreshedAt}
+              nextRefreshAt={leaderboard.nextRefreshAt}
+              refreshIntervalSeconds={leaderboard.refreshIntervalSeconds}
+              refreshTimeZone={leaderboard.refreshTimeZone}
+            />
           </div>
         ) : null}
       </section>
