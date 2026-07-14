@@ -9,6 +9,7 @@ import {
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { CompanyProfileCard } from "@/components/CompanyProfileCard";
 import type { Company } from "@/types/company";
+import { formatHourlyPay, formatLocation } from "@/utils/company-format";
 import { calculateWinRate } from "@/utils/stats";
 
 interface LeaderboardTableProps {
@@ -187,8 +188,8 @@ export function LeaderboardTable({
                 <th className="w-20 py-5 pl-3 pr-4 font-bold">Rank</th>
                 <th className="py-5 pl-8 pr-4 font-bold">Company</th>
                 <th className="px-4 py-5 font-bold">Elo</th>
-                <th className="px-4 py-5 font-bold">Wins</th>
-                <th className="px-4 py-5 font-bold">Matches</th>
+                <th className="px-8 py-5 text-center font-bold">Salary</th>
+                <th className="px-4 py-5 font-bold">Location</th>
                 <th className="py-5 pl-4 font-bold">Win Rate</th>
               </tr>
             </thead>
@@ -231,9 +232,13 @@ export function LeaderboardTable({
                     <td className="px-4 py-6 font-medium text-black">
                       {company.rating}
                     </td>
-                    <td className="px-4 py-6">{company.votes_won}</td>
+                    <td className="whitespace-nowrap px-8 py-6 text-center font-medium text-black">
+                      {formatHourlyPay(company.hourly_pay)}
+                    </td>
                     <td className="px-4 py-6">
-                      {company.total_matches}
+                      <span className="block max-w-48 truncate">
+                        {formatLocation(company.housing_perk)}
+                      </span>
                     </td>
                     <td className="py-6 pl-4">
                       <span className="text-sm font-bold text-black">

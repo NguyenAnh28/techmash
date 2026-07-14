@@ -3,32 +3,15 @@
 import type { ReactNode } from "react";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import type { Company } from "@/types/company";
+import {
+  formatHourlyPay,
+  formatLocation,
+  formatSubmissions,
+} from "@/utils/company-format";
 
 interface CompanyProfileCardProps {
   company: Company;
   footer: ReactNode;
-}
-
-function formatHourlyPay(hourlyPay: number | null) {
-  return hourlyPay === null ? "Not listed" : `$${hourlyPay}/hr`;
-}
-
-function formatSubmissions(numSubmits: number | null) {
-  if (numSubmits === null) {
-    return "No reports";
-  }
-
-  return `${numSubmits} ${numSubmits === 1 ? "report" : "reports"}`;
-}
-
-function formatLocation(housingPerk: string | null) {
-  const location = housingPerk?.trim();
-
-  if (!location) {
-    return "Location not listed";
-  }
-
-  return location.replace(/^relocation to\s+/i, "");
 }
 
 export function CompanyProfileCard({
@@ -64,7 +47,7 @@ export function CompanyProfileCard({
       <div className="mx-4 my-6 overflow-hidden rounded-2xl border border-slate-200 text-sm sm:mx-5">
         <div className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
           <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">
-            Hourly Pay
+            Salary
           </span>
           <span className="text-base font-medium text-black">
             {formatHourlyPay(company.hourly_pay)}
