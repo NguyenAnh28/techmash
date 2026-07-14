@@ -34,7 +34,7 @@ It tracks:
 5. `castVote(winnerId, loserId)` runs on the server.
 6. The database updates both companies in one atomic operation.
 7. The app fetches another matchup.
-8. The leaderboard cache is revalidated so public rankings stay current.
+8. The public leaderboard keeps using its current cached snapshot until the next refresh window.
 
 ## Vote Safety
 
@@ -70,6 +70,12 @@ Tracked events include:
 - Logo load failures from company cards.
 
 These events do not identify a user account. They are meant to show product usage and surface data quality issues.
+
+## Leaderboard Freshness
+
+Votes update company ratings immediately in Supabase, but the public leaderboard is intentionally snapshot-based.
+
+That means a vote may not appear on `/leaderboard` right away. The leaderboard refreshes on a 5-minute cadence so high vote volume does not force every leaderboard visitor to hit a freshly sorted database query.
 
 ## Empty State
 

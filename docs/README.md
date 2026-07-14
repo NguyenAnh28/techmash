@@ -12,5 +12,6 @@ Start here:
 - [logos.md](./logos.md): logo.dev usage, caching, and fallback behavior.
 - [analytics.md](./analytics.md): first-party event tracking and the public stats page.
 - [blog.md](./blog.md): the notes/blog implementation.
+- [load-testing.md](./load-testing.md): leaderboard load-test commands and results.
 
 The app is built as a Next.js App Router project with Supabase as the database. Public users can browse, vote, open company details, and view aggregate stats. Writes that change rankings go through server-side code and a database RPC so votes stay consistent.

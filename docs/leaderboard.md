@@ -2,13 +2,13 @@
 
 ## Purpose
 
-The leaderboard shows the public ranking of internship programs. It is ordered by Elo rating and updates as the community votes.
+The leaderboard shows the public ranking of internship programs. It is ordered by Elo rating and refreshed from a cached snapshot.
 
 ## Route
 
 The leaderboard lives at `/leaderboard`.
 
-`app/leaderboard/page.tsx` reads the current page number from the URL, fetches leaderboard rows from Supabase, and passes them into `LeaderboardTable`.
+`app/leaderboard/page.tsx` reads the current page number from the URL, fetches the cached leaderboard snapshot, and passes the visible page into `LeaderboardTable`.
 
 ## Data Fetching
 
@@ -19,8 +19,25 @@ The action returns:
 - A page of company rows.
 - The total company count.
 - Pagination metadata.
+- Snapshot metadata.
 
-Rows are sorted by rating from highest to lowest. The page size is 20 companies.
+The full sorted list is cached by 5-minute global windows. Each request slices that cached list in memory for the requested page. This avoids sorting and reading the database on every leaderboard request.
+
+Rows are sorted by rating from highest to lowest when the snapshot is generated. The page size is 20 companies.
+
+## Refresh Cadence
+
+The leaderboard snapshot includes:
+
+- `lastRefreshedAt`
+- `nextRefreshAt`
+- `refreshIntervalSeconds`
+
+The refresh window is rounded to clean 5-minute boundaries. For example, a request at `2:24` belongs to the `2:20` snapshot and points to `2:25` as the next refresh.
+
+`components/LeaderboardRefreshTimer.tsx` shows a countdown in the leaderboard header. Times are displayed in the configured leaderboard timezone, currently Pacific Time through `America/Los_Angeles`. When the countdown reaches zero, the UI shows a manual refresh action.
+
+The app does not auto-refresh every open browser tab at the same second. That avoids a traffic spike at the refresh boundary.
 
 ## Table Layout
 
