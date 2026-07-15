@@ -8,7 +8,7 @@ The leaderboard shows the public ranking of internship programs. It is ordered b
 
 The leaderboard lives at `/leaderboard`.
 
-`app/leaderboard/page.tsx` reads the current page number from the URL, fetches the cached leaderboard snapshot, and passes the visible page into `LeaderboardTable`.
+`app/leaderboard/page.tsx` reads the current page number from the URL, fetches the cached leaderboard snapshot, and passes the full ranked snapshot into `LeaderboardTable`.
 
 ## Data Fetching
 
@@ -16,13 +16,14 @@ Leaderboard data is loaded through `getLeaderboard()` in `app/actions.ts`.
 
 The action returns:
 
-- A page of company rows.
+- The full ranked company list.
+- A page of company rows for default pagination metadata.
 - The current rank, previous rank, and rank delta for each row.
 - The total company count.
 - Pagination metadata.
 - Snapshot metadata.
 
-The full sorted list is cached by 5-minute global windows. Each request slices that cached list in memory for the requested page. This avoids sorting and reading the database on every leaderboard request.
+The full sorted list is cached by 5-minute global windows. Each request slices that cached list in memory for the requested page, and the client uses the full snapshot for instant search. This avoids sorting and reading the database on every leaderboard request.
 
 Rows are sorted by rating from highest to lowest when the snapshot is generated. The page size is 20 companies.
 
@@ -46,7 +47,7 @@ The app does not auto-refresh every open browser tab at the same second. That av
 
 ## Table Layout
 
-`components/LeaderboardTable.tsx` renders the table and pagination controls.
+`components/LeaderboardTable.tsx` renders the search input, table, pagination controls, and company detail modal.
 
 Each row shows:
 
@@ -78,6 +79,19 @@ The pagination footer displays:
 - Current page number.
 
 Pagination is URL-based, so `/leaderboard?page=2` can be linked directly.
+
+## Search
+
+Leaderboard search is instant and client-side.
+
+The page sends the full cached snapshot to the browser once. As the user types, `LeaderboardTable` filters company names in memory without making new Supabase requests.
+
+Search behavior:
+
+- Case-insensitive company-name matching.
+- Original global ranks are preserved.
+- Pagination is hidden while search is active.
+- Clearing the input restores normal paginated browsing.
 
 ## Company Detail Modal
 

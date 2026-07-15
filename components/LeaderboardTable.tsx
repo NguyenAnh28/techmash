@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type MouseEvent,
@@ -10,10 +12,15 @@ import { CompanyLogo } from "@/components/CompanyLogo";
 import { CompanyProfileCard } from "@/components/CompanyProfileCard";
 import type { LeaderboardCompany } from "@/types/company";
 import { formatHourlyPay, formatLocation } from "@/utils/company-format";
+import { filterLeaderboardCompanies } from "@/utils/leaderboard";
 import { calculateWinRate } from "@/utils/stats";
 
 interface LeaderboardTableProps {
   companies: LeaderboardCompany[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 interface SelectedCompany {
@@ -184,12 +191,37 @@ function RankMovementTag({
   );
 }
 
+function getLeaderboardPageHref(page: number) {
+  return page <= 1 ? "/leaderboard" : `/leaderboard?page=${page}`;
+}
+
 export function LeaderboardTable({
   companies,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
 }: LeaderboardTableProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompany, setSelectedCompany] =
     useState<SelectedCompany | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const trimmedSearchQuery = searchQuery.trim();
+  const isSearching = trimmedSearchQuery.length > 0;
+  const filteredCompanies = useMemo(
+    () => filterLeaderboardCompanies(companies, searchQuery),
+    [companies, searchQuery],
+  );
+  const pageCompanies = useMemo(() => {
+    const from = (page - 1) * pageSize;
+    return companies.slice(from, from + pageSize);
+  }, [companies, page, pageSize]);
+  const visibleCompanies = isSearching ? filteredCompanies : pageCompanies;
+  const firstVisibleCompany =
+    !isSearching && totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+  const lastVisibleCompany = !isSearching
+    ? Math.min(page * pageSize, totalCount)
+    : 0;
 
   function handleOpenCompany(
     company: LeaderboardCompany,
@@ -227,83 +259,179 @@ export function LeaderboardTable({
 
   return (
     <>
-      <div className="overflow-hidden rounded-3xl border border-black/[0.04] bg-white px-5 pt-1 shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-left">
-            <thead className="border-b border-slate-200 text-[11px] uppercase tracking-[0.32em] text-slate-400">
-              <tr>
-                <th className="w-20 py-5 pl-3 pr-4 font-bold">Rank</th>
-                <th className="py-5 pl-8 pr-4 font-bold">Company</th>
-                <th className="px-4 py-5 font-bold">Elo</th>
-                <th className="px-8 py-5 text-center font-bold">Salary</th>
-                <th className="px-4 py-5 font-bold">Location</th>
-                <th className="py-5 pl-4 font-bold">Win Rate</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {companies.map((company) => {
-                const winRate = calculateWinRate(
-                  company.votes_won,
-                  company.total_matches,
-                );
-                const rank = company.rank;
-
-                return (
-                  <tr
-                    key={company.id}
-                    className="bg-white text-neutral-500 transition-colors hover:bg-neutral-50/70"
-                  >
-                    <td className="py-6 pl-3 pr-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-normal text-black">
-                          #{rank}
-                        </span>
-                        <RankMovementTag rankDelta={company.rankDelta} />
-                      </div>
-                    </td>
-                    <td className="py-6 pl-8 pr-4">
-                      <button
-                        type="button"
-                        onClick={(event) =>
-                          handleOpenCompany(company, rank, winRate, event)
-                        }
-                        className="group flex min-w-48 items-center gap-3 rounded-xl text-left outline-none transition-colors focus-visible:ring-4 focus-visible:ring-slate-100"
-                      >
-                        <CompanyLogo
-                          name={company.name}
-                          domain={company.logo_domain ?? company.domain}
-                          background={company.logo_background}
-                          className="size-9 shrink-0 object-contain"
-                          fallbackClassName="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-normal"
-                        />
-                        <span className="text-xl font-normal tracking-[-0.025em] text-black transition-colors group-hover:text-neutral-500">
-                          {company.name}
-                        </span>
-                      </button>
-                    </td>
-                    <td className="px-4 py-6 font-medium text-black">
-                      {company.rating}
-                    </td>
-                    <td className="whitespace-nowrap px-8 py-6 text-center font-medium text-black">
-                      {formatHourlyPay(company.hourly_pay)}
-                    </td>
-                    <td className="px-4 py-6">
-                      <span className="block max-w-48 truncate">
-                        {formatLocation(company.housing_perk)}
-                      </span>
-                    </td>
-                    <td className="py-6 pl-4">
-                      <span className="text-sm font-bold text-black">
-                        {winRate}%
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="sr-only" htmlFor="leaderboard-search">
+          Search companies
+        </label>
+        <div className="flex w-full items-center gap-3 sm:max-w-sm">
+          <input
+            id="leaderboard-search"
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search companies"
+            className="h-12 w-full rounded-2xl border border-black/[0.06] bg-white px-4 text-base font-medium text-black shadow-[0_12px_40px_rgba(15,23,42,0.05)] outline-none transition-colors placeholder:text-slate-300 focus:border-black/[0.16] focus:ring-4 focus:ring-slate-100"
+          />
+        </div>
+        <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
+          <span>
+            {isSearching
+              ? `${filteredCompanies.length} result${
+                  filteredCompanies.length === 1 ? "" : "s"
+                }`
+              : `${totalCount} companies`}
+          </span>
+          {isSearching ? (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+            >
+              Clear
+            </button>
+          ) : null}
         </div>
       </div>
+
+      <div className="overflow-hidden rounded-3xl border border-black/[0.04] bg-white px-5 pt-1 shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
+        {visibleCompanies.length === 0 ? (
+          <section className="px-6 py-12 text-center">
+            <h2 className="text-3xl font-normal tracking-[-0.035em] text-black">
+              No matches
+            </h2>
+            <p className="mt-3 text-base font-medium leading-7 text-neutral-500">
+              No companies matched “{trimmedSearchQuery}”. Try a shorter name.
+            </p>
+          </section>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-left">
+              <thead className="border-b border-slate-200 text-[11px] uppercase tracking-[0.32em] text-slate-400">
+                <tr>
+                  <th className="w-20 py-5 pl-3 pr-4 font-bold">Rank</th>
+                  <th className="py-5 pl-8 pr-4 font-bold">Company</th>
+                  <th className="px-4 py-5 font-bold">Elo</th>
+                  <th className="px-8 py-5 text-center font-bold">Salary</th>
+                  <th className="px-4 py-5 font-bold">Location</th>
+                  <th className="py-5 pl-4 font-bold">Win Rate</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {visibleCompanies.map((company) => {
+                  const winRate = calculateWinRate(
+                    company.votes_won,
+                    company.total_matches,
+                  );
+                  const rank = company.rank;
+
+                  return (
+                    <tr
+                      key={company.id}
+                      className="bg-white text-neutral-500 transition-colors hover:bg-neutral-50/70"
+                    >
+                      <td className="py-6 pl-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-normal text-black">
+                            #{rank}
+                          </span>
+                          <RankMovementTag rankDelta={company.rankDelta} />
+                        </div>
+                      </td>
+                      <td className="py-6 pl-8 pr-4">
+                        <button
+                          type="button"
+                          onClick={(event) =>
+                            handleOpenCompany(company, rank, winRate, event)
+                          }
+                          className="group flex min-w-48 items-center gap-3 rounded-xl text-left outline-none transition-colors focus-visible:ring-4 focus-visible:ring-slate-100"
+                        >
+                          <CompanyLogo
+                            name={company.name}
+                            domain={company.logo_domain ?? company.domain}
+                            background={company.logo_background}
+                            className="size-9 shrink-0 object-contain"
+                            fallbackClassName="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-normal"
+                          />
+                          <span className="text-xl font-normal tracking-[-0.025em] text-black transition-colors group-hover:text-neutral-500">
+                            {company.name}
+                          </span>
+                        </button>
+                      </td>
+                      <td className="px-4 py-6 font-medium text-black">
+                        {company.rating}
+                      </td>
+                      <td className="whitespace-nowrap px-8 py-6 text-center font-medium text-black">
+                        {formatHourlyPay(company.hourly_pay)}
+                      </td>
+                      <td className="px-4 py-6">
+                        <span className="block max-w-48 truncate">
+                          {formatLocation(company.housing_perk)}
+                        </span>
+                      </td>
+                      <td className="py-6 pl-4">
+                        <span className="text-sm font-bold text-black">
+                          {winRate}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {!isSearching && totalPages > 1 ? (
+        <nav
+          aria-label="Leaderboard pages"
+          className="mt-6 flex flex-col gap-4 rounded-3xl border border-black/[0.04] bg-white px-5 py-4 text-sm font-medium text-neutral-500 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>
+            Showing {firstVisibleCompany}-{lastVisibleCompany} of {totalCount}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {page > 1 ? (
+              <Link
+                href={getLeaderboardPageHref(page - 1)}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+              >
+                Previous
+              </Link>
+            ) : (
+              <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
+                Previous
+              </span>
+            )}
+            <span className="rounded-xl bg-neutral-100 px-3 py-2 text-sm font-medium text-black">
+              Page {page} of {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Link
+                href={getLeaderboardPageHref(page + 1)}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+              >
+                Next
+              </Link>
+            ) : (
+              <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
+                Next
+              </span>
+            )}
+            {page < totalPages ? (
+              <Link
+                href={getLeaderboardPageHref(totalPages)}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
+              >
+                Last
+              </Link>
+            ) : (
+              <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
+                Last
+              </span>
+            )}
+          </div>
+        </nav>
+      ) : null}
       <CompanyDetailModal
         selectedCompany={selectedCompany}
         onClose={handleCloseCompany}

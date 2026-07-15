@@ -57,7 +57,7 @@ Important components:
 - `components/MatchupCard.tsx`: clickable voting card wrapper.
 - `components/CompanyProfileCard.tsx`: shared company card body.
 - `components/CompanyLogo.tsx`: logo.dev image rendering with fallback.
-- `components/LeaderboardTable.tsx`: leaderboard table, pagination, and detail modal.
+- `components/LeaderboardTable.tsx`: leaderboard search, table, pagination, and detail modal.
 - `components/AnalyticsTracker.tsx`: page-view tracking.
 
 ## Shared Company Card

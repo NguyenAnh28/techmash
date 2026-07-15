@@ -37,6 +37,7 @@ export interface VoteResponse {
 
 export interface LeaderboardData {
   companies: LeaderboardCompany[];
+  allCompanies: LeaderboardCompany[];
   page: number;
   pageSize: number;
   totalCount: number;

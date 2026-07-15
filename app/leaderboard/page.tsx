@@ -1,7 +1,6 @@
 import { getLeaderboard } from "@/app/actions";
 import { LeaderboardRefreshTimer } from "@/components/LeaderboardRefreshTimer";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +23,6 @@ function parsePageParam(page: string | string[] | undefined) {
   return parsed;
 }
 
-function getLeaderboardPageHref(page: number) {
-  return page <= 1 ? "/leaderboard" : `/leaderboard?page=${page}`;
-}
-
 export default async function LeaderboardPage({
   searchParams,
 }: LeaderboardPageProps) {
@@ -39,13 +34,6 @@ export default async function LeaderboardPage({
   );
   const leaderboard = leaderboardResult.ok ? leaderboardResult.data : null;
   const leaderboardError = leaderboardResult.ok ? null : leaderboardResult.error;
-  const firstVisibleCompany =
-    leaderboard && leaderboard.totalCount > 0
-      ? (leaderboard.page - 1) * leaderboard.pageSize + 1
-      : 0;
-  const lastVisibleCompany = leaderboard
-    ? Math.min(leaderboard.page * leaderboard.pageSize, leaderboard.totalCount)
-    : 0;
 
   return (
     <main className="bg-white">
@@ -84,60 +72,12 @@ export default async function LeaderboardPage({
         {leaderboard ? (
           <>
             <LeaderboardTable
-              companies={leaderboard.companies}
+              companies={leaderboard.allCompanies}
+              page={leaderboard.page}
+              pageSize={leaderboard.pageSize}
+              totalCount={leaderboard.totalCount}
+              totalPages={leaderboard.totalPages}
             />
-            {leaderboard.totalPages > 1 ? (
-              <nav
-                aria-label="Leaderboard pages"
-                className="mt-6 flex flex-col gap-4 rounded-3xl border border-black/[0.04] bg-white px-5 py-4 text-sm font-medium text-neutral-500 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between"
-              >
-                <span>
-                  Showing {firstVisibleCompany}-{lastVisibleCompany} of{" "}
-                  {leaderboard.totalCount}
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  {leaderboard.page > 1 ? (
-                    <Link
-                      href={getLeaderboardPageHref(leaderboard.page - 1)}
-                      className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
-                    >
-                      Previous
-                    </Link>
-                  ) : (
-                    <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
-                      Previous
-                    </span>
-                  )}
-                  <span className="rounded-xl bg-neutral-100 px-3 py-2 text-sm font-medium text-black">
-                    Page {leaderboard.page} of {leaderboard.totalPages}
-                  </span>
-                  {leaderboard.page < leaderboard.totalPages ? (
-                    <Link
-                      href={getLeaderboardPageHref(leaderboard.page + 1)}
-                      className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
-                    >
-                      Next
-                    </Link>
-                  ) : (
-                    <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
-                      Next
-                    </span>
-                  )}
-                  {leaderboard.page < leaderboard.totalPages ? (
-                    <Link
-                      href={getLeaderboardPageHref(leaderboard.totalPages)}
-                      className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
-                    >
-                      Last
-                    </Link>
-                  ) : (
-                    <span className="rounded-xl px-3 py-2 text-sm font-medium text-slate-300">
-                      Last
-                    </span>
-                  )}
-                </div>
-              </nav>
-            ) : null}
           </>
         ) : (
           <section className="mx-auto max-w-xl border-y border-slate-200 py-10 text-center">

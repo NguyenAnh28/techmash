@@ -79,6 +79,21 @@ export function annotateLeaderboardRanks(
   });
 }
 
+export function filterLeaderboardCompanies(
+  companies: LeaderboardCompany[],
+  query: string,
+) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return companies;
+  }
+
+  return companies.filter((company) =>
+    company.name.toLowerCase().includes(normalizedQuery),
+  );
+}
+
 export function paginateLeaderboardSnapshot(
   companies: LeaderboardCompany[],
   lastRefreshedAt: string,
@@ -100,6 +115,7 @@ export function paginateLeaderboardSnapshot(
 
   return {
     companies: companies.slice(from, to),
+    allCompanies: companies,
     page: sanitizedPage,
     pageSize: sanitizedPageSize,
     totalCount,

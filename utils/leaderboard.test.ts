@@ -3,6 +3,7 @@ import type { Company } from "@/types/company";
 import {
   annotateLeaderboardRanks,
   createLeaderboardRankings,
+  filterLeaderboardCompanies,
   getCurrentLeaderboardRefreshWindow,
   getLeaderboardRefreshMetadata,
   paginateLeaderboardSnapshot,
@@ -75,6 +76,7 @@ describe("paginateLeaderboardSnapshot", () => {
     expect(page.pageSize).toBe(20);
     expect(page.totalCount).toBe(45);
     expect(page.totalPages).toBe(3);
+    expect(page.allCompanies).toHaveLength(45);
     expect(page.nextRefreshAt).toBe("2026-01-01T00:05:00.000Z");
   });
 
@@ -96,6 +98,50 @@ describe("paginateLeaderboardSnapshot", () => {
       "company-3",
       "company-4",
     ]);
+  });
+});
+
+describe("filterLeaderboardCompanies", () => {
+  const rankedCompanies = annotateLeaderboardRanks(
+    [
+      {
+        ...createCompany(1),
+        name: "OpenAI",
+      },
+      {
+        ...createCompany(2),
+        name: "Vercel",
+      },
+      {
+        ...createCompany(3),
+        name: "Google",
+      },
+    ],
+    null,
+  );
+
+  it("returns every company for an empty query", () => {
+    expect(filterLeaderboardCompanies(rankedCompanies, "   ")).toEqual(
+      rankedCompanies,
+    );
+  });
+
+  it("matches company names case-insensitively and partially", () => {
+    expect(
+      filterLeaderboardCompanies(rankedCompanies, "OO").map((company) => ({
+        name: company.name,
+        rank: company.rank,
+      })),
+    ).toEqual([
+      {
+        name: "Google",
+        rank: 3,
+      },
+    ]);
+  });
+
+  it("returns an empty list when no company matches", () => {
+    expect(filterLeaderboardCompanies(rankedCompanies, "stripe")).toEqual([]);
   });
 });
 
