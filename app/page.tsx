@@ -13,9 +13,12 @@ export default async function HomePage() {
           Vote
         </p>
         <h1 className="mx-auto mt-3 max-w-4xl text-4xl font-normal leading-none tracking-[-0.04em] text-black sm:mt-4 sm:text-5xl lg:text-6xl">
+          InternMash
+        </h1>
+        <h2 className="mx-auto mt-3 max-w-4xl text-2xl font-normal leading-tight tracking-[-0.035em] text-black sm:text-4xl lg:text-5xl">
           <span className="sm:hidden">Pick your internship</span>
           <span className="hidden sm:inline">Where would you rather intern?</span>
-        </h1>
+        </h2>
         <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-6 text-neutral-500 sm:mt-5 sm:text-lg sm:leading-7">
           Compare two programs at a time. The leaderboard moves as the
           community chooses.

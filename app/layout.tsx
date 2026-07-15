@@ -13,8 +13,49 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "InternMash",
-  description: "Vote on tech internships and watch Elo rankings update.",
+  metadataBase: new URL("https://www.internmash.com"),
+  title: {
+    default: "InternMash | Compare Tech Internships",
+    template: "%s | InternMash",
+  },
+  description:
+    "Compare and rank tech internship programs head-to-head. Vote on benefits, culture, and prestige to build the ultimate global tech internship leaderboard.",
+  keywords: [
+    "internmash",
+    "intern mash",
+    "tech internships",
+    "software engineering intern",
+    "internship rankings",
+    "elo ranking",
+    "compare internships",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "InternMash | Compare Tech Internships",
+    description:
+      "Compare and rank tech internship programs head-to-head. Vote on benefits, culture, and prestige to build the ultimate global tech internship leaderboard.",
+    url: "https://www.internmash.com",
+    siteName: "InternMash",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 710,
+        height: 710,
+        alt: "InternMash tech internship comparison leaderboard",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "InternMash | Compare Tech Internships",
+    description:
+      "Compare and rank tech internship programs head-to-head. Vote on benefits, culture, and prestige to build the ultimate global tech internship leaderboard.",
+    images: ["/og-image.jpg"],
+  },
   icons: {
     icon: "/internmash-logo.png",
     apple: "/internmash-logo.png",

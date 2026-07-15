@@ -77,6 +77,7 @@ Plaid,plaid,plaid.com,55,8,"Relocation to New York City, NY",Software Engineer d
 Rubrik,rubrik,rubrik.com,55,8,"Relocation to Palo Alto, CA",Software Engineer division role assignment
 Tanium,tanium,tanium.com,55,7,"Relocation to Durham, NC",Software Engineer division role assignment
 Mercury,mercury,mercury.com,55,5,"Relocation to San Francisco, CA",Backend Engineer division role assignment
+Patreon,patreon,patreon.com,55,2,"Relocation to San Francisco, CA",Software Engineer division role assignment
 One Medical,onemedical,onemedical.com,55,5,Relocation to Remote United States,Software Engineer division role assignment
 McKinsey,mckinsey,mckinsey.com,55,4,"Relocation to San Francisco, CA",Software Engineer division role assignment
 LinkedIn,linkedin,linkedin.com,54,24,"Relocation to Mountain View, CA",Software Engineer division role assignment
@@ -95,6 +96,7 @@ Quantcast,quantcast,quantcast.com,53,6,"Relocation to Seattle, WA",Software Engi
 Cohere.ai,cohereai,cohere.com,53,5,Relocation to Remote United States,Software Engineer division role assignment
 Intuitive Surgical,intuitivesurgical,intuitivesurgical.com,53,4,"Relocation to San Jose, CA",Software Engineer division role assignment
 X - The Moonshot Factory,xthemoonshotfactory,x.company,53,4,"Relocation to Mountain View, CA",Software Engineer division role assignment
+GEICO,geico,geico.com,53,1,"Relocation to New York City, NY",Software Engineer division role assignment
 Google,google,google.com,52,73,"Relocation to Mountain View, CA",Software Engineer division role assignment
 Meta,meta,meta.com,52,41,"Relocation to Menlo Park, CA",Software Engineer division role assignment
 Snowflake,snowflake,snowflake.com,52,26,"Relocation to Menlo Park, CA",Software Engineer division role assignment
@@ -132,6 +134,7 @@ AppLovin,applovin,applovin.com,50,4,"Relocation to Palo Alto, CA",Software Engin
 Sumo Logic,sumologic,sumologic.com,50,4,"Relocation to Redwood City, CA",Software Engineer division role assignment
 Tatari,tatari,tatari.tv,50,4,"Relocation to New York City, NY",Software Engineer division role assignment
 Zoom,zoom,zoom.us,50,4,"Relocation to San Jose, CA",Software Engineer division role assignment
+Gemini,gemini,gemini.com,50,2,"Relocation to New York City, NY",Software Engineer division role assignment
 Workday,workday,workday.com,49,18,"Relocation to San Jose, CA",Software Engineer division role assignment
 Morgan Stanley,morganstanley,morganstanley.com,49,14,"Relocation to New York City, NY",Quantitative Researcher division role assignment
 Robinhood,robinhood,robinhood.com,49,13,"Relocation to Menlo Park, CA",Software Engineer division role assignment
@@ -146,6 +149,7 @@ Cockroach Labs,cockroachlabs,cockroachlabs.com,49,4,"Relocation to New York City
 Illumio,illumio,illumio.com,49,4,"Relocation to Sunnyvale, CA",Software Engineer division role assignment
 realtor.com,realtorcom,realtor.com,49,4,"Relocation to Austin, TX",Software Engineer division role assignment
 ZipRecruiter,ziprecruiter,ziprecruiter.com,49,4,"Relocation to Santa Monica, CA",Software Engineer division role assignment
+Handshake,handshake,joinhandshake.com,49,2,"Relocation to San Francisco, CA",Software Engineer division role assignment
 Apple,apple,apple.com,48,55,"Relocation to New York, NY",Software Engineer division role assignment
 HubSpot,hubspot,hubspot.com,48,25,"Relocation to Cambridge, MA",Software Engineer division role assignment
 ServiceNow,servicenow,servicenow.com,48,24,"Relocation to Santa Clara, CA",Software Engineer division role assignment
@@ -167,6 +171,7 @@ Infinera,infinera,infinera.com,48,4,"Relocation to San Jose, CA",Software Engine
 Remitly,remitly,remitly.com,48,4,"Relocation to Seattle, WA",Software Engineer division role assignment
 TuSimple,tusimple,tusimple.com,48,4,"Relocation to San Diego, CA",Software Engineer division role assignment
 Verily Life Sciences,verilylifesciences,verily.com,48,4,"Relocation to San Francisco, CA",Software Engineer division role assignment
+Texas Instruments,texasinstruments,ti.com,48,9,"Relocation to Santa Clara, CA",Software Engineer division role assignment
 Intuit,intuit,intuit.com,47,22,"Relocation to San Diego, CA",Software Engineer division role assignment
 Goldman Sachs,goldmansachs,goldmansachs.com,47,20,"Relocation to Salt Lake City, UT",Software Engineer division role assignment
 GoDaddy,godaddy,godaddy.com,47,14,"Relocation to Tempe, AZ",Software Engineer division role assignment
@@ -184,6 +189,7 @@ BitGo,bitgo,bitgo.com,47,5,Relocation to Remote,Software Engineer division role 
 Wish,wish,wish.com,47,5,"Relocation to San Fransisco, CA (Remote)",Software Engineer division role assignment
 Rentathon,rentathon,rentathonapp.com,47,4,"Relocation to San Francisco, CA",Software Engineer division role assignment
 WePay,wepay,wepay.com,47,4,"Relocation to Redwood City, CA",Software Engineer division role assignment
+T-Mobile,tmobile,t-mobile.com,47,10,"Relocation to Bellevue, WA",Software Engineer division role assignment
 Microsoft,microsoft,microsoft.com,46,46,"Relocation to Seattle, WA",Software Engineer division role assignment
 Qualcomm,qualcomm,qualcomm.com,46,17,"Relocation to San Diego, CA",Software Engineer division role assignment
 Twilio,twilio,twilio.com,46,11,Relocation to Remote United States,Software Engineer division role assignment
@@ -203,6 +209,7 @@ Credit Karma,creditkarma,creditkarma.com,45,8,"Relocation to Charlotte, NC",Soft
 Nextdoor,nextdoor,nextdoor.com,45,6,"Relocation to San Francisco, CA",Software Engineer division role assignment
 NortonLifeLock,nortonlifelock,nortonlifelock.com,45,5,"Relocation to Culver City, CA",Software Engineer division role assignment
 Wealthfront,wealthfront,wealthfront.com,45,4,"Relocation to Palo Alto, CA",Software Engineer division role assignment
+Ripple,ripple,ripple.com,45,5,"Relocation to San Francisco, CA",Software Engineer division role assignment
 Box,box,box.com,45,1,"Relocation to Redwood City, CA",Software Engineer division role assignment
 Tesla,tesla,tesla.com,44,70,"Relocation to Palo Alto, CA",Software Engineer division role assignment
 IBM,ibm,ibm.com,44,65,"Relocation to Lowell, MA",Software Engineer division role assignment
@@ -263,7 +270,6 @@ Siemens,siemens,siemens.com,32,19,"Relocation to Milford, OH",Software Engineer 
 CACI International,caciinternational,caci.com,32,15,"Relocation to Sterling, VA",Software Engineer division role assignment
 Publicis Sapient,publicissapient,publicissapient.com,32,14,"Relocation to Palo Alto, CA",Software Engineer division role assignment
 Caterpillar,caterpillar,caterpillar.com,32,13,"Relocation to Peoria, IL",Software Engineer division role assignment
-T-Mobile,tmobile,t-mobile.com,32,13,"Relocation to Bellevue, WA",Software Engineer division role assignment
 SpaceX,spacex,spacex.com,32,12,"Relocation to Hawthorne, CA",Software Engineer division role assignment
 Ford,ford,ford.com,32,10,"Relocation to Dearborn, MI",Software Engineer division role assignment
 Leidos,leidos,leidos.com,31,28,"Relocation to Reston, VA",Software Engineer division role assignment
@@ -274,6 +280,7 @@ MITRE,mitre,mitre.org,31,13,"Relocation to Bedford, MA",Software Engineer divisi
 Western Digital,westerndigital,westerndigital.com,31,13,"Relocation to Irvine, CA",Software Engineer division role assignment
 Chevron,chevron,chevron.com,31,11,"Relocation to Houston, TX",Software Engineer division role assignment
 Medtronic,medtronic,medtronic.com,31,11,"Relocation to Northridge, CA",Software Engineer division role assignment
+CDK Global,cdkglobal,cdkglobal.com,31,9,"Relocation to Chicago, IL",Software Engineer division role assignment
 Garmin,garmin,garmin.com,30,24,"Relocation to Olathe, KS",Software Engineer division role assignment
 Boeing,boeing,boeing.com,30,12,"Relocation to Charleston, SC",Software Engineer division role assignment
 John Deere,johndeere,deere.com,30,11,"Relocation to Urbandale, IA",Software Engineer division role assignment
