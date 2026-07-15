@@ -60,9 +60,15 @@ const COMPANY_OVERRIDES: Record<
   "Millennium Management": {
     domain: "mlp.com",
   },
+  PwC: {
+    domain: "pwc.com",
+  },
   RTX: {
     domain: "rtx.com",
     logoDomain: "rtx.com",
+  },
+  Snap: {
+    logoDomain: "snapchat.com",
   },
   Tiktok: {
     domain: "tiktok.com",
@@ -82,6 +88,10 @@ const COMPANY_OVERRIDES: Record<
   },
   "Walmart Global Tech": {
     domain: "walmart.com",
+  },
+  WePay: {
+    domain: "chase.com",
+    logoDomain: "chase.com",
   },
   "X - The Moonshot Factory": {
     domain: "x.company",

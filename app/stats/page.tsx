@@ -22,7 +22,9 @@ interface CountRow {
 }
 
 const LOOKBACK_DAYS = 30;
-const EVENT_LIMIT = 5000;
+const EVENT_DISPLAY_LIMIT = 10000;
+const EVENT_FETCH_LIMIT = EVENT_DISPLAY_LIMIT + 1;
+const EVENT_PAGE_SIZE = 1000;
 
 function getMetadataString(metadata: Json, key: string) {
   if (
@@ -79,23 +81,46 @@ function getPercent(numerator: number, denominator: number) {
   return `${Math.round((numerator / denominator) * 100)}%`;
 }
 
+function formatPublicEventCount(count: number, isCapped: boolean) {
+  if (isCapped) {
+    return "10k+";
+  }
+
+  return count.toLocaleString("en-US");
+}
+
 async function getAnalyticsRows() {
   const since = new Date();
   since.setDate(since.getDate() - LOOKBACK_DAYS);
 
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("analytics_events")
-    .select("event_type,path,session_id,metadata,created_at")
-    .gte("created_at", since.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(EVENT_LIMIT);
+  const rows: AnalyticsEventRow[] = [];
 
-  if (error) {
-    throw new Error(error.message);
+  for (let from = 0; from < EVENT_FETCH_LIMIT; from += EVENT_PAGE_SIZE) {
+    const to = Math.min(from + EVENT_PAGE_SIZE, EVENT_FETCH_LIMIT) - 1;
+    const { data, error } = await supabase
+      .from("analytics_events")
+      .select("event_type,path,session_id,metadata,created_at")
+      .gte("created_at", since.toISOString())
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data?.length) {
+      break;
+    }
+
+    rows.push(...data);
+
+    if (data.length < to - from + 1) {
+      break;
+    }
   }
 
-  return data ?? [];
+  return rows;
 }
 
 function MetricCard({
@@ -178,27 +203,29 @@ export default async function StatsPage() {
     error = getErrorMessage(caughtError);
   }
 
-  const pageViews = getEventCount(rows, "page_view");
-  const matchupViews = getEventCount(rows, "matchup_view");
-  const votes = getEventCount(rows, "vote_cast");
-  const logoErrors = getEventCount(rows, "logo_error");
+  const eventCountIsCapped = rows.length > EVENT_DISPLAY_LIMIT;
+  const visibleRows = rows.slice(0, EVENT_DISPLAY_LIMIT);
+  const pageViews = getEventCount(visibleRows, "page_view");
+  const matchupViews = getEventCount(visibleRows, "matchup_view");
+  const votes = getEventCount(visibleRows, "vote_cast");
+  const logoErrors = getEventCount(visibleRows, "logo_error");
   const uniqueSessions = new Set(
-    rows.map((row) => row.session_id).filter(Boolean),
+    visibleRows.map((row) => row.session_id).filter(Boolean),
   ).size;
 
   const topPages = countBy(
-    rows.filter((row) => row.event_type === "page_view"),
+    visibleRows.filter((row) => row.event_type === "page_view"),
     (row) => row.path ?? "/",
   );
   const topWinners = countBy(
-    rows.filter((row) => row.event_type === "vote_cast"),
+    visibleRows.filter((row) => row.event_type === "vote_cast"),
     (row) => getMetadataString(row.metadata, "winner_name"),
   );
   const logoFailures = countBy(
-    rows.filter((row) => row.event_type === "logo_error"),
+    visibleRows.filter((row) => row.event_type === "logo_error"),
     (row) => getMetadataString(row.metadata, "company_name"),
   ).map((row) => {
-    const matchingEvent = rows.find(
+    const matchingEvent = visibleRows.find(
       (event) =>
         event.event_type === "logo_error" &&
         getMetadataString(event.metadata, "company_name") === row.label,
@@ -230,7 +257,7 @@ export default async function StatsPage() {
         </div>
         <div className="shrink-0 border-y border-slate-200 py-4 text-left md:text-right">
           <p className="text-4xl font-normal tracking-[-0.04em] text-black">
-            {rows.length}
+            {formatPublicEventCount(visibleRows.length, eventCountIsCapped)}
           </p>
           <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.32em] text-slate-400">
             Public Events
