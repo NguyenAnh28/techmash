@@ -20,7 +20,7 @@ export const blogPosts: BlogPost[] = [
   {
     slug: "matchup-loading-bottleneck",
     eyebrow: "Performance",
-    title: "Pre-launch fixes for the voting loop",
+    title: "Pre-launch anxiety",
     date: "July 15, 2026",
     readTime: "4 min read",
     summary:
