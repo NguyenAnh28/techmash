@@ -6,10 +6,12 @@ import {
   filterLeaderboardCompanies,
   getCurrentLeaderboardRefreshWindow,
   getLeaderboardRefreshMetadata,
+  normalizeLeaderboardSortOption,
   paginateLeaderboardSnapshot,
+  sortLeaderboardCompanies,
 } from "@/utils/leaderboard";
 
-function createCompany(index: number): Company {
+function createCompany(index: number, overrides: Partial<Company> = {}): Company {
   return {
     id: `company-${index}`,
     name: `Company ${index}`,
@@ -24,6 +26,7 @@ function createCompany(index: number): Company {
     votes_won: index,
     total_matches: index + 1,
     created_at: "2026-01-01T00:00:00.000Z",
+    ...overrides,
   };
 }
 
@@ -75,8 +78,11 @@ describe("paginateLeaderboardSnapshot", () => {
     expect(page.page).toBe(2);
     expect(page.pageSize).toBe(20);
     expect(page.totalCount).toBe(45);
+    expect(page.totalCompanyCount).toBe(45);
     expect(page.totalPages).toBe(3);
     expect(page.allCompanies).toHaveLength(45);
+    expect(page.sort).toBe("elo");
+    expect(page.query).toBe("");
     expect(page.nextRefreshAt).toBe("2026-01-01T00:05:00.000Z");
   });
 
@@ -98,6 +104,187 @@ describe("paginateLeaderboardSnapshot", () => {
       "company-3",
       "company-4",
     ]);
+  });
+
+  it("filters before sorting and paginating leaderboard results", () => {
+    const companies = annotateLeaderboardRanks(
+      [
+        createCompany(1, {
+          name: "OpenAI",
+          hourly_pay: 10,
+        }),
+        createCompany(2, {
+          name: "AI Lab",
+          hourly_pay: 100,
+        }),
+        createCompany(3, {
+          name: "Meta",
+          hourly_pay: 200,
+        }),
+      ],
+      null,
+    );
+
+    const page = paginateLeaderboardSnapshot(
+      companies,
+      "2026-01-01T00:00:00.000Z",
+      1,
+      1,
+      {
+        query: "ai",
+        sort: "salary",
+      },
+    );
+
+    expect(page.companies.map((company) => company.name)).toEqual(["AI Lab"]);
+    expect(page.totalCompanyCount).toBe(3);
+    expect(page.totalCount).toBe(2);
+    expect(page.totalPages).toBe(2);
+    expect(page.sort).toBe("salary");
+    expect(page.query).toBe("ai");
+  });
+});
+
+describe("normalizeLeaderboardSortOption", () => {
+  it("falls back to Elo sorting for invalid sort values", () => {
+    expect(normalizeLeaderboardSortOption("not-real")).toBe("elo");
+  });
+});
+
+describe("sortLeaderboardCompanies", () => {
+  it("preserves official Elo order by default", () => {
+    const companies = annotateLeaderboardRanks(
+      [
+        createCompany(1, { rating: 1500 }),
+        createCompany(2, { rating: 1400 }),
+        createCompany(3, { rating: 1300 }),
+      ],
+      null,
+    );
+
+    expect(
+      sortLeaderboardCompanies(companies).companies.map((company) => company.id),
+    ).toEqual(["company-1", "company-2", "company-3"]);
+  });
+
+  it("sorts salary descending and places missing salaries last", () => {
+    const companies = annotateLeaderboardRanks(
+      [
+        createCompany(1, {
+          name: "Null Rank One",
+          hourly_pay: null,
+        }),
+        createCompany(2, {
+          name: "Highest Salary",
+          hourly_pay: 100,
+        }),
+        createCompany(3, {
+          name: "Null Rank Three",
+          hourly_pay: null,
+        }),
+        createCompany(4, {
+          name: "Middle Salary",
+          hourly_pay: 50,
+        }),
+      ],
+      null,
+    );
+
+    expect(
+      sortLeaderboardCompanies(companies, "salary").companies.map(
+        (company) => company.name,
+      ),
+    ).toEqual([
+      "Highest Salary",
+      "Middle Salary",
+      "Null Rank One",
+      "Null Rank Three",
+    ]);
+  });
+
+  it("sorts win rate descending and treats zero matches as zero percent", () => {
+    const companies = annotateLeaderboardRanks(
+      [
+        createCompany(1, {
+          name: "Half",
+          votes_won: 1,
+          total_matches: 2,
+        }),
+        createCompany(2, {
+          name: "Three Quarters",
+          votes_won: 3,
+          total_matches: 4,
+        }),
+        createCompany(3, {
+          name: "No Matches",
+          votes_won: 0,
+          total_matches: 0,
+        }),
+      ],
+      null,
+    );
+
+    expect(
+      sortLeaderboardCompanies(companies, "win-rate").companies.map(
+        (company) => company.name,
+      ),
+    ).toEqual(["Three Quarters", "Half", "No Matches"]);
+  });
+
+  it("sorts matches completed descending", () => {
+    const companies = annotateLeaderboardRanks(
+      [
+        createCompany(1, {
+          name: "Three Matches",
+          total_matches: 3,
+        }),
+        createCompany(2, {
+          name: "Ten Matches",
+          total_matches: 10,
+        }),
+        createCompany(3, {
+          name: "No Matches",
+          total_matches: 0,
+        }),
+      ],
+      null,
+    );
+
+    expect(
+      sortLeaderboardCompanies(companies, "matches").companies.map(
+        (company) => company.name,
+      ),
+    ).toEqual(["Ten Matches", "Three Matches", "No Matches"]);
+  });
+
+  it("breaks ties by official Elo rank and then normalized name", () => {
+    const companies = annotateLeaderboardRanks(
+      [
+        createCompany(1, {
+          name: "Beta",
+          hourly_pay: 75,
+        }),
+        createCompany(2, {
+          name: "Alpha",
+          hourly_pay: 75,
+        }),
+        createCompany(3, {
+          name: "Charlie",
+          hourly_pay: 75,
+        }),
+      ],
+      null,
+    );
+    const duplicateRankCompanies = companies.map((company) => ({
+      ...company,
+      rank: 1,
+    }));
+
+    expect(
+      sortLeaderboardCompanies(duplicateRankCompanies, "salary").companies.map(
+        (company) => company.name,
+      ),
+    ).toEqual(["Alpha", "Beta", "Charlie"]);
   });
 });
 

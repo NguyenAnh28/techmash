@@ -1,24 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type MouseEvent,
 } from "react";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { CompanyProfileCard } from "@/components/CompanyProfileCard";
-import type { LeaderboardCompany } from "@/types/company";
+import type {
+  LeaderboardCompany,
+  LeaderboardSortOption,
+} from "@/types/company";
 import { formatHourlyPay, formatLocation } from "@/utils/company-format";
-import { filterLeaderboardCompanies } from "@/utils/leaderboard";
 import { calculateWinRate } from "@/utils/stats";
 
 interface LeaderboardTableProps {
   companies: LeaderboardCompany[];
   page: number;
   pageSize: number;
+  query: string;
+  sort: LeaderboardSortOption;
+  totalCompanyCount: number;
   totalCount: number;
   totalPages: number;
 }
@@ -28,6 +33,28 @@ interface SelectedCompany {
   rank: number;
   winRate: number;
 }
+
+const sortOptions: {
+  value: LeaderboardSortOption;
+  label: string;
+}[] = [
+  {
+    value: "elo",
+    label: "Sort by Elo points",
+  },
+  {
+    value: "salary",
+    label: "Sort by Salary",
+  },
+  {
+    value: "win-rate",
+    label: "Sort by Win Rate",
+  },
+  {
+    value: "matches",
+    label: "Sort by Matches",
+  },
+];
 
 function CompanyDetailModal({
   selectedCompany,
@@ -191,37 +218,135 @@ function RankMovementTag({
   );
 }
 
-function getLeaderboardPageHref(page: number) {
-  return page <= 1 ? "/leaderboard" : `/leaderboard?page=${page}`;
+function getLeaderboardHref({
+  page,
+  query,
+  sort,
+}: {
+  page: number;
+  query: string;
+  sort: LeaderboardSortOption;
+}) {
+  const params = new URLSearchParams();
+  const normalizedQuery = query.trim();
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  if (sort !== "elo") {
+    params.set("sort", sort);
+  }
+
+  if (normalizedQuery) {
+    params.set("q", normalizedQuery);
+  }
+
+  const queryString = params.toString();
+  return queryString ? `/leaderboard?${queryString}` : "/leaderboard";
 }
 
 export function LeaderboardTable({
   companies,
   page,
   pageSize,
+  query,
+  sort,
+  totalCompanyCount,
   totalCount,
   totalPages,
 }: LeaderboardTableProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
   const [selectedCompany, setSelectedCompany] =
     useState<SelectedCompany | null>(null);
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchDebounceRef = useRef<number | null>(null);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const trimmedSearchQuery = searchQuery.trim();
-  const isSearching = trimmedSearchQuery.length > 0;
-  const filteredCompanies = useMemo(
-    () => filterLeaderboardCompanies(companies, searchQuery),
-    [companies, searchQuery],
-  );
-  const pageCompanies = useMemo(() => {
-    const from = (page - 1) * pageSize;
-    return companies.slice(from, from + pageSize);
-  }, [companies, page, pageSize]);
-  const visibleCompanies = isSearching ? filteredCompanies : pageCompanies;
+  const activeQuery = query.trim();
+  const isSearching = activeQuery.length > 0;
+  const visibleCompanies = companies;
   const firstVisibleCompany =
-    !isSearching && totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
-  const lastVisibleCompany = !isSearching
-    ? Math.min(page * pageSize, totalCount)
-    : 0;
+    totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+  const lastVisibleCompany = Math.min(page * pageSize, totalCount);
+  const selectedSortLabel =
+    sortOptions.find((option) => option.value === sort)?.label ??
+    sortOptions[0].label;
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current !== null) {
+        window.clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSortMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        sortMenuRef.current &&
+        !sortMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsSortMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsSortMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSortMenuOpen]);
+
+  function replaceLeaderboardSearch(nextQuery: string) {
+    if (searchDebounceRef.current !== null) {
+      window.clearTimeout(searchDebounceRef.current);
+    }
+
+    if (nextQuery === activeQuery) {
+      return;
+    }
+
+    searchDebounceRef.current = window.setTimeout(() => {
+      searchDebounceRef.current = null;
+      router.replace(
+        getLeaderboardHref({
+          page: 1,
+          query: nextQuery,
+          sort,
+        }),
+      );
+    }, 250);
+  }
+
+  function handleSortChange(nextSort: LeaderboardSortOption) {
+    if (searchDebounceRef.current !== null) {
+      window.clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+
+    setIsSortMenuOpen(false);
+    router.push(
+      getLeaderboardHref({
+        page: 1,
+        query: searchInputRef.current?.value.trim() ?? activeQuery,
+        sort: nextSort,
+      }),
+    );
+  }
 
   function handleOpenCompany(
     company: LeaderboardCompany,
@@ -244,7 +369,7 @@ export function LeaderboardTable({
     }, 0);
   }
 
-  if (companies.length === 0) {
+  if (totalCompanyCount === 0) {
     return (
       <section className="rounded-3xl border border-black/[0.04] bg-white px-6 py-10 text-center shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
         <h2 className="text-3xl font-normal tracking-[-0.035em] text-black">
@@ -260,31 +385,109 @@ export function LeaderboardTable({
   return (
     <>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="sr-only" htmlFor="leaderboard-search">
-          Search companies
-        </label>
-        <div className="flex w-full items-center gap-3 sm:max-w-sm">
+        <div className="flex w-full flex-col gap-3 sm:max-w-2xl sm:flex-row">
+          <label className="sr-only" htmlFor="leaderboard-search">
+            Search companies
+          </label>
           <input
+            key={query}
+            ref={searchInputRef}
             id="leaderboard-search"
             type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            defaultValue={query}
+            onChange={(event) =>
+              replaceLeaderboardSearch(event.target.value.trim())
+            }
             placeholder="Search companies"
             className="h-12 w-full rounded-2xl border border-black/[0.06] bg-white px-4 text-base font-medium text-black shadow-[0_12px_40px_rgba(15,23,42,0.05)] outline-none transition-colors placeholder:text-slate-300 focus:border-black/[0.16] focus:ring-4 focus:ring-slate-100"
           />
+          <div ref={sortMenuRef} className="relative w-full sm:w-64">
+            <button
+              id="leaderboard-sort"
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={isSortMenuOpen}
+              onClick={() => setIsSortMenuOpen((isOpen) => !isOpen)}
+              className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-black/[0.06] bg-white px-4 text-left text-sm font-bold text-black shadow-[0_12px_40px_rgba(15,23,42,0.05)] outline-none transition-colors hover:bg-neutral-50 focus:border-black/[0.16] focus:ring-4 focus:ring-slate-100"
+            >
+              <span className="truncate">{selectedSortLabel}</span>
+              <span
+                aria-hidden="true"
+                className={[
+                  "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] text-slate-400 transition-transform duration-200",
+                  isSortMenuOpen ? "rotate-180" : "",
+                ].join(" ")}
+              >
+                ▼
+              </span>
+            </button>
+            {isSortMenuOpen ? (
+              <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-full overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-1.5 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+                <div
+                  role="listbox"
+                  aria-labelledby="leaderboard-sort"
+                  className="flex flex-col gap-1"
+                >
+                  {sortOptions.map((option) => {
+                    const isSelected = option.value === sort;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => handleSortChange(option.value)}
+                        className={[
+                          "flex h-10 w-full items-center justify-between rounded-xl px-3 text-left text-sm font-bold outline-none transition-colors focus-visible:ring-4 focus-visible:ring-slate-100",
+                          isSelected
+                            ? "bg-neutral-100 text-black"
+                            : "text-neutral-500 hover:bg-neutral-50 hover:text-black",
+                        ].join(" ")}
+                      >
+                        <span>{option.label}</span>
+                        {isSelected ? (
+                          <span aria-hidden="true" className="text-xs">
+                            ✓
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
           <span>
             {isSearching
-              ? `${filteredCompanies.length} result${
-                  filteredCompanies.length === 1 ? "" : "s"
+              ? `${totalCount} result${
+                  totalCount === 1 ? "" : "s"
                 }`
-              : `${totalCount} companies`}
+              : `${totalCompanyCount} companies`}
           </span>
           {isSearching ? (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                if (searchInputRef.current) {
+                  searchInputRef.current.value = "";
+                }
+
+                if (searchDebounceRef.current !== null) {
+                  window.clearTimeout(searchDebounceRef.current);
+                  searchDebounceRef.current = null;
+                }
+
+                router.replace(
+                  getLeaderboardHref({
+                    page: 1,
+                    query: "",
+                    sort,
+                  }),
+                );
+              }}
               className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
             >
               Clear
@@ -300,7 +503,7 @@ export function LeaderboardTable({
               No matches
             </h2>
             <p className="mt-3 text-base font-medium leading-7 text-neutral-500">
-              No companies matched “{trimmedSearchQuery}”. Try a shorter name.
+              No companies matched “{activeQuery}”. Try a shorter name.
             </p>
           </section>
         ) : (
@@ -381,7 +584,7 @@ export function LeaderboardTable({
           </div>
         )}
       </div>
-      {!isSearching && totalPages > 1 ? (
+      {totalPages > 1 ? (
         <nav
           aria-label="Leaderboard pages"
           className="mt-6 flex flex-col gap-4 rounded-3xl border border-black/[0.04] bg-white px-5 py-4 text-sm font-medium text-neutral-500 shadow-[0_18px_60px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between"
@@ -392,7 +595,11 @@ export function LeaderboardTable({
           <div className="flex flex-wrap items-center gap-2">
             {page > 1 ? (
               <Link
-                href={getLeaderboardPageHref(page - 1)}
+                href={getLeaderboardHref({
+                  page: page - 1,
+                  query: activeQuery,
+                  sort,
+                })}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
               >
                 Previous
@@ -407,7 +614,11 @@ export function LeaderboardTable({
             </span>
             {page < totalPages ? (
               <Link
-                href={getLeaderboardPageHref(page + 1)}
+                href={getLeaderboardHref({
+                  page: page + 1,
+                  query: activeQuery,
+                  sort,
+                })}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
               >
                 Next
@@ -419,7 +630,11 @@ export function LeaderboardTable({
             )}
             {page < totalPages ? (
               <Link
-                href={getLeaderboardPageHref(totalPages)}
+                href={getLeaderboardHref({
+                  page: totalPages,
+                  query: activeQuery,
+                  sort,
+                })}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
               >
                 Last

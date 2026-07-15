@@ -9,6 +9,8 @@ const LEADERBOARD_PAGE_SIZE = 20;
 interface LeaderboardPageProps {
   searchParams?: Promise<{
     page?: string | string[];
+    q?: string | string[];
+    sort?: string | string[];
   }>;
 }
 
@@ -28,10 +30,12 @@ export default async function LeaderboardPage({
 }: LeaderboardPageProps) {
   const resolvedSearchParams = await searchParams;
   const requestedPage = parsePageParam(resolvedSearchParams?.page);
-  const leaderboardResult = await getLeaderboard(
-    requestedPage,
-    LEADERBOARD_PAGE_SIZE,
-  );
+  const leaderboardResult = await getLeaderboard({
+    page: requestedPage,
+    pageSize: LEADERBOARD_PAGE_SIZE,
+    query: resolvedSearchParams?.q,
+    sort: resolvedSearchParams?.sort,
+  });
   const leaderboard = leaderboardResult.ok ? leaderboardResult.data : null;
   const leaderboardError = leaderboardResult.ok ? null : leaderboardResult.error;
 
@@ -53,7 +57,7 @@ export default async function LeaderboardPage({
         {leaderboard ? (
           <div className="w-full shrink-0 border-y border-slate-200 py-4 text-left md:w-64 md:text-right">
             <p className="text-4xl font-normal tracking-[-0.04em] text-black">
-              {leaderboard.totalCount}
+              {leaderboard.totalCompanyCount}
             </p>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.32em] text-slate-400">
               Companies
@@ -72,9 +76,12 @@ export default async function LeaderboardPage({
         {leaderboard ? (
           <>
             <LeaderboardTable
-              companies={leaderboard.allCompanies}
+              companies={leaderboard.companies}
               page={leaderboard.page}
               pageSize={leaderboard.pageSize}
+              query={leaderboard.query}
+              sort={leaderboard.sort}
+              totalCompanyCount={leaderboard.totalCompanyCount}
               totalCount={leaderboard.totalCount}
               totalPages={leaderboard.totalPages}
             />

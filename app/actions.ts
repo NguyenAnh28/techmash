@@ -59,8 +59,17 @@ export async function getMatchup(): Promise<ActionResult<Matchup | null>> {
 }
 
 export async function getLeaderboard(
-  page = 1,
-  pageSize = 20,
+  {
+    page = 1,
+    pageSize = 20,
+    sort,
+    query,
+  }: {
+    page?: number;
+    pageSize?: number;
+    sort?: string | string[];
+    query?: string | string[];
+  } = {},
 ): Promise<ActionResult<LeaderboardData>> {
   try {
     const refreshWindow = getCurrentLeaderboardRefreshWindow();
@@ -75,6 +84,10 @@ export async function getLeaderboard(
         refreshWindow.lastRefreshedAt,
         page,
         pageSize,
+        {
+          sort,
+          query,
+        },
       ),
     };
   } catch (error) {

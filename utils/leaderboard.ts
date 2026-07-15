@@ -2,10 +2,26 @@ import type {
   Company,
   LeaderboardCompany,
   LeaderboardData,
+  LeaderboardSortOption,
 } from "@/types/company";
 
 export const LEADERBOARD_REFRESH_INTERVAL_SECONDS = 300;
 export const LEADERBOARD_REFRESH_TIME_ZONE = "America/Los_Angeles";
+export const LEADERBOARD_SORT_OPTIONS: LeaderboardSortOption[] = [
+  "elo",
+  "salary",
+  "win-rate",
+  "matches",
+];
+
+interface LeaderboardSortRecord {
+  company: LeaderboardCompany;
+  eloRank: number;
+  salarySortValue: number;
+  winRateSortValue: number;
+  matchesSortValue: number;
+  normalizedName: string;
+}
 
 export function getCurrentLeaderboardRefreshWindow(
   now = new Date(),
@@ -94,17 +110,147 @@ export function filterLeaderboardCompanies(
   );
 }
 
+export function normalizeLeaderboardSortOption(
+  sort: string | string[] | undefined,
+): LeaderboardSortOption {
+  const value = Array.isArray(sort) ? sort[0] : sort;
+
+  return LEADERBOARD_SORT_OPTIONS.includes(value as LeaderboardSortOption)
+    ? (value as LeaderboardSortOption)
+    : "elo";
+}
+
+function normalizeLeaderboardQuery(query: string | string[] | undefined) {
+  const value = Array.isArray(query) ? query[0] : query;
+  return value?.trim() ?? "";
+}
+
+function compareNumbersDescending(first: number, second: number) {
+  if (first > second) {
+    return -1;
+  }
+
+  if (first < second) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function compareNamesAscending(first: string, second: string) {
+  if (first < second) {
+    return -1;
+  }
+
+  if (first > second) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function compareByOfficialEloRank(
+  first: LeaderboardSortRecord,
+  second: LeaderboardSortRecord,
+) {
+  if (first.eloRank < second.eloRank) {
+    return -1;
+  }
+
+  if (first.eloRank > second.eloRank) {
+    return 1;
+  }
+
+  return compareNamesAscending(first.normalizedName, second.normalizedName);
+}
+
+function createLeaderboardSortRecord(
+  company: LeaderboardCompany,
+): LeaderboardSortRecord {
+  const winRateSortValue =
+    company.total_matches > 0 ? company.votes_won / company.total_matches : 0;
+
+  return {
+    company,
+    eloRank: company.rank,
+    salarySortValue: company.hourly_pay ?? Number.NEGATIVE_INFINITY,
+    winRateSortValue,
+    matchesSortValue: company.total_matches,
+    normalizedName: company.name.toLowerCase(),
+  };
+}
+
+export function sortLeaderboardCompanies(
+  companies: LeaderboardCompany[],
+  sort: string | string[] | undefined = "elo",
+  query: string | string[] | undefined = "",
+) {
+  const normalizedSort = normalizeLeaderboardSortOption(sort);
+  const normalizedQuery = normalizeLeaderboardQuery(query);
+  const filteredCompanies = filterLeaderboardCompanies(
+    companies,
+    normalizedQuery,
+  );
+  const sortRecords = filteredCompanies.map(createLeaderboardSortRecord);
+
+  if (normalizedSort === "salary") {
+    sortRecords.sort((first, second) => {
+      const salarySort = compareNumbersDescending(
+        first.salarySortValue,
+        second.salarySortValue,
+      );
+
+      return salarySort || compareByOfficialEloRank(first, second);
+    });
+  } else if (normalizedSort === "win-rate") {
+    sortRecords.sort((first, second) => {
+      const winRateSort = compareNumbersDescending(
+        first.winRateSortValue,
+        second.winRateSortValue,
+      );
+
+      return winRateSort || compareByOfficialEloRank(first, second);
+    });
+  } else if (normalizedSort === "matches") {
+    sortRecords.sort((first, second) => {
+      const matchesSort = compareNumbersDescending(
+        first.matchesSortValue,
+        second.matchesSortValue,
+      );
+
+      return matchesSort || compareByOfficialEloRank(first, second);
+    });
+  }
+
+  return {
+    companies: sortRecords.map((record) => record.company),
+    query: normalizedQuery,
+    sort: normalizedSort,
+    totalCompanyCount: companies.length,
+    totalCount: sortRecords.length,
+  };
+}
+
 export function paginateLeaderboardSnapshot(
   companies: LeaderboardCompany[],
   lastRefreshedAt: string,
   page = 1,
   pageSize = 20,
+  options: {
+    sort?: string | string[];
+    query?: string | string[];
+  } = {},
 ): LeaderboardData {
   const sanitizedPageSize = Number.isFinite(pageSize)
     ? Math.min(Math.max(Math.floor(pageSize), 1), 100)
     : 20;
   const requestedPage = Number.isFinite(page) ? Math.floor(page) : 1;
-  const totalCount = companies.length;
+  const sortedLeaderboard = sortLeaderboardCompanies(
+    companies,
+    options.sort,
+    options.query,
+  );
+  const totalCount = sortedLeaderboard.totalCount;
   const totalPages = Math.max(
     1,
     Math.ceil(totalCount / sanitizedPageSize),
@@ -114,12 +260,15 @@ export function paginateLeaderboardSnapshot(
   const to = from + sanitizedPageSize;
 
   return {
-    companies: companies.slice(from, to),
-    allCompanies: companies,
+    companies: sortedLeaderboard.companies.slice(from, to),
+    allCompanies: sortedLeaderboard.companies,
     page: sanitizedPage,
     pageSize: sanitizedPageSize,
     totalCount,
+    totalCompanyCount: sortedLeaderboard.totalCompanyCount,
     totalPages,
+    sort: sortedLeaderboard.sort,
+    query: sortedLeaderboard.query,
     ...getLeaderboardRefreshMetadata(lastRefreshedAt),
   };
 }

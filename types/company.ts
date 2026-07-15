@@ -20,6 +20,8 @@ export interface LeaderboardCompany extends Company {
   rankDelta: number | null;
 }
 
+export type LeaderboardSortOption = "elo" | "salary" | "win-rate" | "matches";
+
 export interface Matchup {
   companyA: Company;
   companyB: Company;
@@ -41,7 +43,10 @@ export interface LeaderboardData {
   page: number;
   pageSize: number;
   totalCount: number;
+  totalCompanyCount: number;
   totalPages: number;
+  sort: LeaderboardSortOption;
+  query: string;
   lastRefreshedAt: string;
   nextRefreshAt: string;
   refreshIntervalSeconds: number;
