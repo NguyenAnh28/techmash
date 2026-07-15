@@ -27,7 +27,15 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl px-5 pb-24 sm:px-6">
         {matchupResult.ok ? (
-          <VoteMatchup initialMatchup={matchupResult.data} />
+          <>
+            <VoteMatchup initialMatchup={matchupResult.data} />
+            <p className="mx-auto mt-12 max-w-xl text-center text-sm font-medium leading-6 text-neutral-500">
+              InternMash is a real-time matchmaking platform, essentially a
+              &quot;Facemash&quot; for big tech internships and companies. Cast
+              your votes on prestige, culture, and pay to help shape the live
+              global leaderboard.
+            </p>
+          </>
         ) : (
           <section className="mx-auto max-w-xl border-y border-slate-200 py-10 text-center">
             <h2 className="text-3xl font-normal tracking-[-0.035em] text-black">

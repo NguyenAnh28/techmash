@@ -12,14 +12,16 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const siteDescription =
+  "The ultimate 'Facemash' for big tech internships. Compare and rank tech internship programs head-to-head by benefits, culture, prestige, and pay.";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.internmash.com"),
   title: {
     default: "InternMash | Compare Tech Internships",
     template: "%s | InternMash",
   },
-  description:
-    "Compare and rank tech internship programs head-to-head. Vote on benefits, culture, and prestige to build the ultimate global tech internship leaderboard.",
+  description: siteDescription,
   keywords: [
     "internmash",
     "intern mash",
@@ -28,14 +30,17 @@ export const metadata: Metadata = {
     "internship rankings",
     "elo ranking",
     "compare internships",
+    "facemash for big tech",
+    "facemash for tech companies",
+    "facemash but for bigtech",
+    "tech company matchups",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "InternMash | Compare Tech Internships",
-    description:
-      "Compare and rank tech internship programs head-to-head. Vote on benefits, culture, and prestige to build the ultimate global tech internship leaderboard.",
+    description: siteDescription,
     url: "https://www.internmash.com",
     siteName: "InternMash",
     images: [
@@ -52,8 +57,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "InternMash | Compare Tech Internships",
-    description:
-      "Compare and rank tech internship programs head-to-head. Vote on benefits, culture, and prestige to build the ultimate global tech internship leaderboard.",
+    description: siteDescription,
     images: ["/og-image.jpg"],
   },
   icons: {
