@@ -30,9 +30,9 @@ export function Navbar() {
               priority
               className="size-7 sm:size-10"
             />
-            <span>
+            <span className="hidden sm:inline">
               <span className="block text-base font-medium tracking-[-0.02em] sm:text-2xl sm:tracking-[-0.045em]">
-                Intern<span className="hidden min-[430px]:inline sm:inline">Mash</span>
+                InternMash
               </span>
             </span>
           </Link>
