@@ -260,7 +260,7 @@ export function LeaderboardTable({
   const [selectedCompany, setSelectedCompany] =
     useState<SelectedCompany | null>(null);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [inputValue, setInputValue] = useState(query);
   const searchDebounceRef = useRef<number | null>(null);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -314,6 +314,7 @@ export function LeaderboardTable({
   function replaceLeaderboardSearch(nextQuery: string) {
     if (searchDebounceRef.current !== null) {
       window.clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
     }
 
     if (nextQuery === activeQuery) {
@@ -328,6 +329,7 @@ export function LeaderboardTable({
           query: nextQuery,
           sort,
         }),
+        { scroll: false },
       );
     }, 250);
   }
@@ -342,9 +344,10 @@ export function LeaderboardTable({
     router.push(
       getLeaderboardHref({
         page: 1,
-        query: searchInputRef.current?.value.trim() ?? activeQuery,
+        query: inputValue,
         sort: nextSort,
       }),
+      { scroll: false },
     );
   }
 
@@ -390,14 +393,15 @@ export function LeaderboardTable({
             Search companies
           </label>
           <input
-            key={query}
-            ref={searchInputRef}
             id="leaderboard-search"
             type="search"
-            defaultValue={query}
-            onChange={(event) =>
-              replaceLeaderboardSearch(event.target.value.trim())
-            }
+            value={inputValue}
+            onChange={(event) => {
+              const nextQuery = event.target.value;
+
+              setInputValue(nextQuery);
+              replaceLeaderboardSearch(nextQuery.trim());
+            }}
             placeholder="Search companies"
             className="h-12 w-full rounded-2xl border border-black/[0.06] bg-white px-4 text-base font-medium text-black shadow-[0_12px_40px_rgba(15,23,42,0.05)] outline-none transition-colors placeholder:text-slate-300 focus:border-black/[0.16] focus:ring-4 focus:ring-slate-100"
           />
@@ -471,9 +475,7 @@ export function LeaderboardTable({
             <button
               type="button"
               onClick={() => {
-                if (searchInputRef.current) {
-                  searchInputRef.current.value = "";
-                }
+                setInputValue("");
 
                 if (searchDebounceRef.current !== null) {
                   window.clearTimeout(searchDebounceRef.current);
@@ -486,6 +488,7 @@ export function LeaderboardTable({
                     query: "",
                     sort,
                   }),
+                  { scroll: false },
                 );
               }}
               className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
@@ -600,6 +603,7 @@ export function LeaderboardTable({
                   query: activeQuery,
                   sort,
                 })}
+                scroll={false}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
               >
                 Previous
@@ -619,6 +623,7 @@ export function LeaderboardTable({
                   query: activeQuery,
                   sort,
                 })}
+                scroll={false}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
               >
                 Next
@@ -635,6 +640,7 @@ export function LeaderboardTable({
                   query: activeQuery,
                   sort,
                 })}
+                scroll={false}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-100"
               >
                 Last
