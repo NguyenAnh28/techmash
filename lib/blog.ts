@@ -18,6 +18,24 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "matchup-loading-bottleneck",
+    eyebrow: "Performance",
+    title: "Pre-launch fixes for the voting loop",
+    date: "July 15, 2026",
+    readTime: "4 min read",
+    summary:
+      "Before launch, I tightened the voting path: lighter matchup loading, fail-fast database writes, and Redis rate limits for vote spam.",
+    body: [
+      "Yesterday I did a pre-launch pass on the voting loop. The app already worked, but I wanted to look at it the way production traffic would look at it: lots of quick votes, repeated matchup loads, and maybe a few people or scripts pressing harder than a normal user would.",
+      "The first bottleneck was kind of embarrassing in a useful way. To show two companies, the server was asking Supabase for the entire company table, parsing the JSON in Next.js, and then picking two random rows in memory. After a vote, it did the same thing again to load the next battle. So the loop was basically: write vote, download every company, pick two, repeat.",
+      "With the current dataset, that full payload is still small enough to survive. The cleaned seed has around 298 companies, and my rough estimate for loading all of them was about 106 KB. But the optimized matchup response is closer to 733 bytes because it only returns the two rows the user needs. That is around a 145x payload reduction for one of the hottest paths in the app.",
+      "The fix was to move random matchup selection into Postgres. I added a `get_random_matchup()` function that returns two random company rows, and the Next.js Server Action now calls that RPC instead of downloading everything. The frontend still receives `companyA` and `companyB`, so the UI does not need to know that the work moved closer to the database.",
+      "I also tightened vote writes. The vote function already locks both company rows before calculating Elo, which protects the ranking from race conditions. But row locks can become a problem if a popular matchup gets hit by a lot of users at once. Instead of letting requests wait until Vercel times out, I added short database timeouts so stuck votes fail fast and return a friendly retry path.",
+      "The last fix was rate limiting. A voting app is easy to script against, and I do not want one loop in someone’s terminal to inflate a company’s Elo. Since Vercel functions are stateless, an in-memory limiter would not be reliable. I added Redis-backed rate limiting through Upstash so vote attempts are counted across serverless instances.",
+      "None of these changes make the product bigger, but they make it feel more launch-ready. The voting loop now moves less data, database waits have limits, and obvious vote spam has a shared guardrail. I like this kind of work because it is not flashy, but it makes the app feel like something I can actually put in front of people.",
+    ],
+  },
+  {
     slug: "leaderboard-snapshots-cut-repeated-work",
     eyebrow: "Performance",
     title: "How cached snapshots made the leaderboard cheaper to serve",
