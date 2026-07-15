@@ -93,7 +93,7 @@ export function VoteMatchup({ initialMatchup }: VoteMatchupProps) {
 
   return (
     <section className="w-full" aria-live="polite">
-      <div className="relative grid w-full grid-cols-2 items-stretch justify-items-center gap-3 md:gap-16">
+      <div className="relative grid w-full grid-cols-2 items-stretch justify-items-center gap-3 md:gap-6 lg:gap-16">
         <MatchupCard
           company={matchup.companyA}
           disabled={isSubmitting}
@@ -101,8 +101,8 @@ export function VoteMatchup({ initialMatchup }: VoteMatchupProps) {
           onVote={() => handleVote(matchup.companyA, matchup.companyB)}
         />
 
-        <div className="absolute left-1/2 top-8 z-10 flex -translate-x-1/2 justify-center md:top-10">
-          <span className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-[0.6rem] font-bold tracking-[0.16em] text-slate-400 shadow-[0_12px_30px_rgba(15,23,42,0.08)] md:size-12 md:text-xs md:tracking-[0.2em] md:shadow-none">
+        <div className="absolute left-1/2 top-8 z-10 flex -translate-x-1/2 justify-center lg:top-10">
+          <span className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-[0.6rem] font-bold tracking-[0.16em] text-slate-400 shadow-[0_12px_30px_rgba(15,23,42,0.08)] lg:size-12 lg:text-xs lg:tracking-[0.2em] lg:shadow-none">
             VS
           </span>
         </div>
