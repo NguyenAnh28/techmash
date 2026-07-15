@@ -60,8 +60,16 @@ const COMPANY_OVERRIDES: Record<
   "Millennium Management": {
     domain: "mlp.com",
   },
+  RTX: {
+    domain: "rtx.com",
+    logoDomain: "rtx.com",
+  },
   Tiktok: {
     domain: "tiktok.com",
+  },
+  "Valkyrie Trading": {
+    domain: "valkyrietrading.com",
+    logoDomain: "valkyrietrading.com",
   },
   "Verily Life Sciences": {
     domain: "verily.com",
