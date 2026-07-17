@@ -5,6 +5,7 @@ This folder explains the main pieces of InternMash in plain technical language. 
 Start here:
 
 - [frontend.md](./frontend.md): routes, shared UI, layout, and the client/server split.
+- [software-design.md](./software-design.md): senior-level system design, ownership boundaries, bottlenecks, and delegation plan.
 - [voting.md](./voting.md): the pairwise voting flow and vote card behavior.
 - [leaderboard.md](./leaderboard.md): rankings, pagination, and company detail modals.
 - [algorithm.md](./algorithm.md): Elo rating behavior and vote math.
