@@ -209,7 +209,7 @@ export default async function StatsPage() {
   const matchupViews = getEventCount(visibleRows, "matchup_view");
   const votes = getEventCount(visibleRows, "vote_cast");
   const logoErrors = getEventCount(visibleRows, "logo_error");
-  const uniqueSessions = new Set(
+  const uniqueBrowsers = new Set(
     visibleRows.map((row) => row.session_id).filter(Boolean),
   ).size;
 
@@ -276,7 +276,9 @@ export default async function StatsPage() {
               <MetricCard
                 label="Page Views"
                 value={pageViews}
-                helper={`${uniqueSessions} anonymous sessions`}
+                helper={`${uniqueBrowsers} unique browser${
+                  uniqueBrowsers === 1 ? "" : "s"
+                }`}
               />
               <MetricCard
                 label="Votes"

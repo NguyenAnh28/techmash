@@ -1,6 +1,36 @@
-# InternMash
+<p align="center">
+  <img src="public/internmash-logo.png" alt="InternMash logo" width="96" height="96">
+</p>
 
-InternMash is a Next.js and Supabase app where visitors choose where they would rather intern. Votes update Elo ratings through an atomic Postgres function, and the leaderboard shows the global internship ranking.
+<h1 align="center">InternMash</h1>
+
+<p align="center">
+  Compare tech internship programs head-to-head and build a community-ranked Elo leaderboard.
+</p>
+
+<p align="center">
+  <a href="https://www.internmash.com">Website</a>
+  ·
+  <a href="docs/software-design.md">Design</a>
+  ·
+  <a href="docs/setup-runbook.md">Setup</a>
+</p>
+
+## What it does
+
+- Shows two internship programs and lets visitors vote on where they would rather intern.
+- Updates company Elo ratings through an atomic Supabase Postgres function.
+- Renders a searchable, sortable, paginated leaderboard.
+- Tracks lightweight anonymous analytics for public product stats.
+
+## Tech stack
+
+- Next.js App Router
+- React
+- TypeScript
+- Supabase Postgres
+- Upstash Redis
+- Tailwind CSS
 
 ## Quick Start
 
@@ -35,4 +65,9 @@ npm run test
 npm run build
 ```
 
-Implementation details live in `docs/implementation-blueprint.md` and setup notes live in `docs/setup-runbook.md`.
+## Docs
+
+- [Software design](docs/software-design.md)
+- [Implementation blueprint](docs/implementation-blueprint.md)
+- [Setup runbook](docs/setup-runbook.md)
+- [Supabase](docs/supabase.md)
