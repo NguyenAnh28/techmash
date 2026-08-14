@@ -21,7 +21,6 @@ interface CountRow {
   helper?: string;
 }
 
-const LOOKBACK_DAYS = 30;
 const EVENT_DISPLAY_LIMIT = 10000;
 const EVENT_FETCH_LIMIT = EVENT_DISPLAY_LIMIT + 1;
 const EVENT_PAGE_SIZE = 1000;
@@ -90,9 +89,6 @@ function formatPublicEventCount(count: number, isCapped: boolean) {
 }
 
 async function getAnalyticsRows() {
-  const since = new Date();
-  since.setDate(since.getDate() - LOOKBACK_DAYS);
-
   const supabase = createSupabaseAdminClient();
   const rows: AnalyticsEventRow[] = [];
 
@@ -101,7 +97,6 @@ async function getAnalyticsRows() {
     const { data, error } = await supabase
       .from("analytics_events")
       .select("event_type,path,session_id,metadata,created_at")
-      .gte("created_at", since.toISOString())
       .order("created_at", { ascending: false })
       .range(from, to);
 
@@ -251,8 +246,7 @@ export default async function StatsPage() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg font-medium leading-7 text-neutral-500">
             A public look at how students are using InternMash: votes,
-            matchups, page traffic, and cleanup signals from the last{" "}
-            {LOOKBACK_DAYS} days.
+            matchups, page traffic, and cleanup signals — all time.
           </p>
         </div>
         <div className="shrink-0 border-y border-slate-200 py-4 text-left md:text-right">
